@@ -37,7 +37,7 @@ const requiredEnvVars = [
 for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
         //if any required variables is missing, log error and exit
-        console.error(`❌ Missing required environment variable: ${envVar}`);
+        console.error(` Missing required environment variable: ${envVar}`);
         process.exit(1); //exit with error code 1
     }
 }

@@ -142,7 +142,7 @@ class AtlasApiService {
             
             return latestSnapshot;
         } catch (error) {
-            console.error('❌ Failed to get latest snapshot:', error.message);
+            console.error(' Failed to get latest snapshot:', error.message);
             throw error;
         }
     }
@@ -150,7 +150,7 @@ class AtlasApiService {
     // Create cluster - Using simplified version of your Postman format
     async createCluster(clusterName, options = {}) {
         try {
-            console.log(`🏗️ Creating cluster: ${clusterName}`);
+            console.log(` Creating cluster: ${clusterName}`);
             
             // Simplified cluster configuration object for sandbox environments
             const clusterConfig = {
@@ -187,7 +187,7 @@ class AtlasApiService {
             const response = await this.client.post(`/groups/${this.groupId}/clusters`, clusterConfig);
             
             console.log(` Cluster creation initiated: ${clusterName}`);
-            console.log(`⏱ Cluster will take 5-10 minutes to provision`);
+            console.log(` Cluster will take 5-10 minutes to provision`);
             
             //return response data describing the created cluster req
             return response.data;
@@ -215,7 +215,7 @@ class AtlasApiService {
             return response.data;
         } catch (error) {
             if (error.response?.status === 404) {
-                console.log(`ℹ️ Cluster ${clusterName} already deleted or not found`);
+                console.log(` Cluster ${clusterName} already deleted or not found`);
                 return { message: 'Cluster not found (may already be deleted)' };
             }
             console.error(` Failed to delete cluster ${clusterName}:`, error.response?.data || error.message);
@@ -234,8 +234,8 @@ class AtlasApiService {
         //record start time for timeout calculation
         const startTime = Date.now();
 
-        console.log(`⏱️ Waiting for cluster ${clusterName} to reach state: ${targetState}`);
-        console.log(`🔄 Will check every 30 seconds, max wait: ${maxWaitMinutes} minutes`);
+        console.log(` Waiting for cluster ${clusterName} to reach state: ${targetState}`);
+        console.log(` Will check every 30 seconds, max wait: ${maxWaitMinutes} minutes`);
 
         //loop until cluster reaches target state or timeout exceeded
         while (Date.now() - startTime < maxWaitMs) {
@@ -245,10 +245,10 @@ class AtlasApiService {
 
                 const currentState = cluster.stateName;
                 //log the current cluster state
-                console.log(`📊 Cluster ${clusterName} state: ${currentState}`);
+                console.log(` Cluster ${clusterName} state: ${currentState}`);
                 //check if cluster is in desired state - if yes, return clsuter info to caller
                 if (currentState === targetState) {
-                    console.log(`✅ Cluster ${clusterName} is now ${targetState}!`);
+                    console.log(` Cluster ${clusterName} is now ${targetState}!`);
                     return cluster;
                 }
 
@@ -258,7 +258,7 @@ class AtlasApiService {
                 }
 
                 // log wait before next poll iteration
-                console.log(`⏳ Waiting 30 seconds before next status check...`);
+                console.log(` Waiting 30 seconds before next status check...`);
                 
                 //wait for poll interval duration
                 await this.delay(pollInterval);
@@ -284,8 +284,8 @@ class AtlasApiService {
     // Create restore job on Atlas cluster from snapshot (Atlas REST API)
     async createRestoreJob(targetClusterName, snapshotId) {
         try {
-            console.log(`🔄 Creating restore job for cluster: ${targetClusterName}`);
-            console.log(`📸 Using snapshot: ${snapshotId}`);
+            console.log(` Creating restore job for cluster: ${targetClusterName}`);
+            console.log(`Using snapshot: ${snapshotId}`);
             
             //payload describing what snapshot and cluster to use for restore
             const restorePayload = {
@@ -299,13 +299,13 @@ class AtlasApiService {
                 restorePayload
             );
 
-            console.log(`✅ Restore job created successfully`);
-            console.log(`🆔 Restore job ID: ${response.data.id}`);
+            console.log(` Restore job created successfully`);
+            console.log(`Restore job ID: ${response.data.id}`);
             
             //return data about the restore job to caller
             return response.data;
         } catch (error) {
-            console.error(`❌ Failed to create restore job:`, error.response?.data || error.message);
+            console.error(`Failed to create restore job:`, error.response?.data || error.message);
             throw error;
         }
     }
@@ -320,7 +320,7 @@ class AtlasApiService {
         //record start time for timeout logic
         const startTime = Date.now();
 
-        console.log(`⏱️ Waiting for restore job ${restoreJobId} to complete...`);
+        console.log(` Waiting for restore job ${restoreJobId} to complete...`);
         //poll loop continues until timeout expires
         while (Date.now() - startTime < maxWaitMs) {
             try {
@@ -333,11 +333,11 @@ class AtlasApiService {
                 const job = response.data;
 
                 //log current restore job status including delvery type and cancellation status
-                console.log(`📊 Restore job status: ${job.deliveryType} - ${job.cancelled ? 'CANCELLED' : 'ACTIVE'}`);
+                console.log(` Restore job status: ${job.deliveryType} - ${job.cancelled ? 'CANCELLED' : 'ACTIVE'}`);
 
                 //if job has a finished timestamp, its complete
                 if (job.finishedAt) {
-                    console.log(`✅ Restore job completed at: ${job.finishedAt}`);
+                    console.log(`Restore job completed at: ${job.finishedAt}`);
                     //return job info for further processing if needed
                     return job;
                 }

@@ -22,8 +22,8 @@ class SnapshotManager {
             const latestSnapshot = snapshots.results[0];
             const snapshotAge = Date.now() - new Date(latestSnapshot.createdAt).getTime();
             
-            console.log(`✅ Snapshot validation passed`);
-            console.log(`📸 Latest snapshot: ${latestSnapshot.id}`);
+            console.log(` Snapshot validation passed`);
+            console.log(` Latest snapshot: ${latestSnapshot.id}`);
             
             return {
                 isValid: true,
@@ -32,7 +32,7 @@ class SnapshotManager {
                 snapshotAge: snapshotAge
             };
         } catch (error) {
-            console.error('❌ Snapshot validation failed:', error.message);
+            console.error(' Snapshot validation failed:', error.message);
             throw error;
         }
     }

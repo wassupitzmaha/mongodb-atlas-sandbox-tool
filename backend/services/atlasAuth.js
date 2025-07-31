@@ -15,7 +15,7 @@ class AtlasAuthService {
         this.clientSecret = process.env.ATLAS_CLIENT_SECRET;
         this.authUrl = process.env.ATLAS_AUTH_URL;
 
-        console.log('🔍 AtlasAuthService constructor debug:');
+        console.log(' AtlasAuthService constructor debug:');
         console.log('  - Auth URL from env:', process.env.ATLAS_AUTH_URL);
         console.log('  - Auth URL in class:', this.authUrl);
         console.log('  - Client ID set:', !!this.clientId);
@@ -37,14 +37,14 @@ class AtlasAuthService {
         //internal storage for token expiry timestamp (milliseconds), initially null
         this.tokenExpiry = null; 
         
-        console.log('✅ AtlasAuthService initialized successfully');
+        console.log(' AtlasAuthService initialized successfully');
     }
 
     //method to request  a new oauth token using the client cred grant type
     async getAuthToken() {
         try {
-            console.log('🔑 Requesting Atlas OAuth token...');
-            console.log('🔍 Using URL:', this.authUrl);
+            console.log(' Requesting Atlas OAuth token...');
+            console.log(' Using URL:', this.authUrl);
             
             //make POST req to the OAuth token endpoint
             const response = await axios.post(
@@ -71,13 +71,13 @@ class AtlasAuthService {
             //5 min buffer helps avoid edge cases where token could expire during use
             this.tokenExpiry = Date.now() + ((response.data.expires_in - 300) * 1000);
             
-            console.log('✅ Atlas OAuth token acquired successfully');
+            console.log(' Atlas OAuth token acquired successfully');
 
             //return the acquired token to the caller
             return this.accessToken;
             
         } catch (error) {
-            console.error('❌ Atlas OAuth failed:', error.message);
+            console.error(' Atlas OAuth failed:', error.message);
             
             if (error.response) {
                 const { status, data } = error.response;

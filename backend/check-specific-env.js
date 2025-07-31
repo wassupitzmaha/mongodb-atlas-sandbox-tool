@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-console.log('🔍 Specific Environment Check:');
+console.log(' Specific Environment Check:');
 console.log('');
 
 const authUrl = process.env.ATLAS_AUTH_URL;

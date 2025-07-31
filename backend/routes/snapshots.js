@@ -53,7 +53,7 @@ router.get('/available', async (req, res, next) => {
 // Get latest snapshot info
 router.get('/latest', async (req, res, next) => {
     try {
-        console.log('📸 Getting latest snapshot information...');
+        console.log(' Getting latest snapshot information...');
         
         //await fetching the latest snapshot info
         const snapshotInfo = await snapshotManager.getLatestSnapshotInfo();
