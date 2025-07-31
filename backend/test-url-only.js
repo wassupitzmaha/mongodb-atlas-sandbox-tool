@@ -8,17 +8,17 @@ async function testUrlOnly() {
     const clientId = process.env.ATLAS_CLIENT_ID;
     const clientSecret = process.env.ATLAS_CLIENT_SECRET;
     
-    console.log('🔍 URL Test:');
+    console.log(' URL Test:');
     console.log('Auth URL:', authUrl);
     console.log('Valid URL format:', /^https:\/\//.test(authUrl));
     
     if (!authUrl || !authUrl.startsWith('https://')) {
-        console.error('❌ Invalid or missing auth URL');
+        console.error(' Invalid or missing auth URL');
         return;
     }
     
     try {
-        console.log('🔄 Testing axios request to:', authUrl);
+        console.log(' Testing axios request to:', authUrl);
         
         const response = await axios.post(
             authUrl,
@@ -34,11 +34,11 @@ async function testUrlOnly() {
             }
         );
         
-        console.log('✅ Success! Response status:', response.status);
+        console.log(' Success! Response status:', response.status);
         console.log('Token received:', !!response.data.access_token);
         
     } catch (error) {
-        console.error('❌ Request failed:');
+        console.error(' Request failed:');
         console.error('Error message:', error.message);
         console.error('Error code:', error.code);
         console.error('Request config URL:', error.config?.url);

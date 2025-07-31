@@ -14,13 +14,13 @@ console.log('ATLAS_AUTH_URL:', process.env.ATLAS_AUTH_URL);
 console.log('');
 
 if (!process.env.ATLAS_CLIENT_ID) {
-    console.error('❌ ATLAS_CLIENT_ID is not set!');
+    console.error(' ATLAS_CLIENT_ID is not set!');
 }
 if (!process.env.ATLAS_CLIENT_SECRET) {
-    console.error('❌ ATLAS_CLIENT_SECRET is not set!');
+    console.error(' ATLAS_CLIENT_SECRET is not set!');
 }
 if (!process.env.ATLAS_AUTH_URL) {
-    console.error('❌ ATLAS_AUTH_URL is not set!');
+    console.error(' ATLAS_AUTH_URL is not set!');
 }
 
 console.log('Current working directory:', process.cwd());
@@ -30,9 +30,9 @@ console.log('Looking for .env file at:', process.cwd() + '/.env');
 try {
     const fs = await import('fs');
     const envContent = fs.readFileSync('.env', 'utf8');
-    console.log('\n✅ .env file found and readable');
+    console.log('\n .env file found and readable');
     console.log('First few lines:');
     console.log(envContent.split('\n').slice(0, 3).join('\n'));
 } catch (error) {
-    console.error('\n❌ Cannot read .env file:', error.message);
+    console.error('\n Cannot read .env file:', error.message);
 }

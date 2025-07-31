@@ -27,7 +27,7 @@ const atlasAuthMiddleware = async (req, res, next) => {
         next();
         
     } catch (error) {
-        console.error('❌ Atlas authentication middleware failed:', error.message);
+        console.error(' Atlas authentication middleware failed:', error.message);
         
         res.status(401).json({
             error: 'Atlas authentication error',

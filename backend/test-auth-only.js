@@ -3,13 +3,13 @@ import atlasAuth from './services/atlasAuth.js';
 
 async function testAuthOnly() {
     try {
-        console.log('🔄 Testing authentication...');
+        console.log(' Testing authentication...');
         
         const token = await atlasAuth.getAuthToken();
-        console.log('✅ Success! Token acquired:', token.substring(0, 30) + '...');
+        console.log(' Success! Token acquired:', token.substring(0, 30) + '...');
         
     } catch (error) {
-        console.error('❌ Auth test failed:', error.message);
+        console.error(' Auth test failed:', error.message);
     }
 }
 
