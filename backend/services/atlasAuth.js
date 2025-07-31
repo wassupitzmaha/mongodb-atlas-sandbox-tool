@@ -1,9 +1,12 @@
 // Atlas OAuth Authentication Service - Fixed Environment Loading
 import axios from 'axios';
+
+//import our atuhtentication service 
 import dotenv from 'dotenv';
 
 // Load environment variables in the service file
 dotenv.config();
+
 
 class AtlasAuthService {
     constructor() {

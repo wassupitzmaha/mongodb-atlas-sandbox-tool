@@ -1,11 +1,18 @@
 // Atlas Authentication Middleware
+import dotenv from 'dotenv';
+
+//import the atlas authentication service 
 import atlasAuth from '../services/atlasAuth.js';
 
+//load env variables
+dotenv.config();
+
+//middelware function that ensures we have a valid atlas token before processing requests
 const atlasAuthMiddleware = async (req, res, next) => {
     try {
-        // Ensure we have a valid Atlas token
+        //tries to get a valid Atlas token
         const token = await atlasAuth.getValidToken();
-        
+        //if no token is avaibale then return a 401 code
         if (!token) {
             return res.status(401).json({
                 error: 'Atlas authentication failed',

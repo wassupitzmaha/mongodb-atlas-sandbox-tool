@@ -7,7 +7,7 @@ const router = express.Router();
 // Test Atlas authentication
 router.get('/test', async (req, res, next) => {
     try {
-        console.log('🔐 Testing Atlas authentication...');
+        console.log(' Testing Atlas authentication...');
         
         // Force token refresh to test connectivity
         const token = await atlasAuth.refreshToken();
@@ -16,7 +16,8 @@ router.get('/test', async (req, res, next) => {
             status: 'success',
             message: 'Atlas authentication successful',
             tokenAcquired: !!token,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            clientId: process.env.ATLAS_CLIENT_ID.substring(0, 10) + '...'
         });
         
     } catch (error) {
@@ -32,6 +33,7 @@ router.get('/status', async (req, res, next) => {
         res.json({
             status: 'success',
             tokenValid: isValid,
+            tokenExpiry: atlasAuth.tokenExpiry,
             timestamp: new Date().toISOString()
         });
         
