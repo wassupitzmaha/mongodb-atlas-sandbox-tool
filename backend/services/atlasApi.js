@@ -186,14 +186,14 @@ class AtlasApiService {
             //POST req to create the lcuster with defined config
             const response = await this.client.post(`/groups/${this.groupId}/clusters`, clusterConfig);
             
-            console.log(`✅ Cluster creation initiated: ${clusterName}`);
-            console.log(`⏱️ Cluster will take 5-10 minutes to provision`);
+            console.log(` Cluster creation initiated: ${clusterName}`);
+            console.log(`⏱ Cluster will take 5-10 minutes to provision`);
             
             //return response data describing the created cluster req
             return response.data;
         } catch (error) {
             //log cluster creation failure details
-            console.error('❌ Failed to create cluster:', error.response?.data || error.message);
+            console.error(' Failed to create cluster:', error.response?.data || error.message);
             throw error;
         }
     }
@@ -201,7 +201,7 @@ class AtlasApiService {
     // Delete cluster given its name
     async deleteCluster(clusterName) {
         try {
-            console.log(`🗑️ Deleting cluster: ${clusterName}`);
+            console.log(` Deleting cluster: ${clusterName}`);
             
             //send DELETE req for the cluster, passing options in the req body as data
             const response = await this.client.delete(`/groups/${this.groupId}/clusters/${clusterName}`, {
@@ -211,14 +211,14 @@ class AtlasApiService {
                 }
             });
             
-            console.log(`✅ Cluster deletion initiated: ${clusterName}`);
+            console.log(`Cluster deletion initiated: ${clusterName}`);
             return response.data;
         } catch (error) {
             if (error.response?.status === 404) {
                 console.log(`ℹ️ Cluster ${clusterName} already deleted or not found`);
                 return { message: 'Cluster not found (may already be deleted)' };
             }
-            console.error(`❌ Failed to delete cluster ${clusterName}:`, error.response?.data || error.message);
+            console.error(` Failed to delete cluster ${clusterName}:`, error.response?.data || error.message);
             throw error;
         }
     }
