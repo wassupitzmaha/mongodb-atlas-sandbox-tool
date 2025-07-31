@@ -21,8 +21,9 @@ const atlasAuthMiddleware = async (req, res, next) => {
             });
         }
         
-        // Add token to request context for debugging
+        //store the token in the request object for debugging purposes
         req.atlasToken = token;
+        //calling next to go to the next middleware
         next();
         
     } catch (error) {

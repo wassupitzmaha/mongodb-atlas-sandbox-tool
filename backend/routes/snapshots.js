@@ -1,147 +1,129 @@
-import dotenv from 'dotenv;'
+// Snapshot management routes using JustAir-Dedicated-Cluster
+import express from 'express';
+import dotenv from 'dotenv';
+import atlasApi from '../services/atlasApi.js';
+//import snapshotManager service which contains the snapshot-specifc business logic
+import snapshotManager from '../services/snapshotManager.js';
 
-dotenv.config()
+// Load environment variables
+dotenv.config();
 
-// Global Error Handler for Atlas API Operations
-const errorHandler = (err, req, res, next) => {
-    console.error('🚨 Error occurred:', {
-        message: err.message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-        url: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString()
-    });
+//creat an express router instance to modularize this set of routes
+const router = express.Router();
 
-    // Handle specific Atlas API errors (from your Postman collection responses)
-    if (err.response) {
-        const { status, data } = err.response;
+// Get all available snapshots from production cluster
+router.get('/available', async (req, res, next) => {
+    try {
+        console.log(`📸 Getting available snapshots from ${process.env.PRODUCTION_CLUSTER_NAME}...`);
+
+        //await the async call to get all available snapshots via snapshotManager
+        const snapshots = await snapshotManager.getAvailableSnapshots();
+        //Respond with JSON containing metadata and a mapped list of snapshots
+        res.json({
+            status: 'success',
+            sourceCluster: process.env.PRODUCTION_CLUSTER_NAME,
+
+            //map over each snapshot to select and reformat relevant fields for API response
+            totalSnapshots: snapshots.totalSnapshots,
+            snapshots: snapshots.snapshots.map(snapshot => ({
+                id: snapshot.id,
+                createdAt: snapshot.createdAt,
+                description: snapshot.description,
+
+                //convert storage size from bytes to gigabytes with two decimals
+                sizeGB: (snapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2),
+                type: snapshot.type,
+                status: snapshot.status
+            })),
+
+            //include info about latest snapshot if one even exits, or null otherwise
+            latestSnapshot: snapshots.latestSnapshot ? {
+                id: snapshots.latestSnapshot.id,
+                createdAt: snapshots.latestSnapshot.createdAt,
+                sizeGB: (snapshots.latestSnapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2)
+            } : null,
+            timestamp: new Date().toISOString()
+        });
         
-        switch (status) {
-            case 400:
-                return res.status(400).json({
-                    error: 'Bad Request',
-                    message: data.detail || data.error || 'Invalid request parameters',
-                    code: 'ATLAS_BAD_REQUEST',
-                    timestamp: new Date().toISOString()
-                });
-                
-            case 401:
-                return res.status(401).json({
-                    error: 'Unauthorized',
-                    message: 'Atlas authentication failed - token may be expired',
-                    code: 'ATLAS_AUTH_FAILED',
-                    timestamp: new Date().toISOString()
-                });
-                
-            case 403:
-                return res.status(403).json({
-                    error: 'Forbidden',
-                    message: 'Insufficient permissions for Atlas operation',
-                    code: 'ATLAS_FORBIDDEN',
-                    timestamp: new Date().toISOString()
-                });
-                
-            case 404:
-                return res.status(404).json({
-                    error: 'Not Found',
-                    message: data.detail || 'Atlas resource not found',
-                    code: 'ATLAS_NOT_FOUND',
-                    timestamp: new Date().toISOString()
-                });
-                
-            case 409:
-                return res.status(409).json({
-                    error: 'Conflict',
-                    message: data.detail || 'Resource already exists or conflicting operation',
-                    code: 'ATLAS_CONFLICT',
-                    timestamp: new Date().toISOString()
-                });
-                
-            case 429:
-                return res.status(429).json({
-                    error: 'Rate Limited',
-                    message: 'Too many requests to Atlas API - please wait before retrying',
-                    code: 'ATLAS_RATE_LIMITED',
-                    retryAfter: err.response.headers['retry-after'] || '60',
-                    timestamp: new Date().toISOString()
-                });
-                
-            case 503:
-                return res.status(503).json({
-                    error: 'Service Unavailable',
-                    message: 'Atlas API is temporarily unavailable',
-                    code: 'ATLAS_SERVICE_UNAVAILABLE',
-                    timestamp: new Date().toISOString()
-                });
-                
-            default:
-                return res.status(status).json({
-                    error: 'Atlas API Error',
-                    message: data.detail || data.error || 'Unknown Atlas API error',
-                    code: 'ATLAS_API_ERROR',
-                    statusCode: status,
-                    timestamp: new Date().toISOString()
-                });
-        }
+    } catch (error) {
+        next(error);
     }
+});
 
-    // Handle network/timeout errors
-    if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
-        return res.status(503).json({
-            error: 'Service Unavailable',
-            message: 'Cannot connect to Atlas API - check network connectivity',
-            code: 'ATLAS_CONNECTION_ERROR',
+// Get latest snapshot info
+router.get('/latest', async (req, res, next) => {
+    try {
+        console.log('📸 Getting latest snapshot information...');
+        
+        //await fetching the latest snapshot info
+        const snapshotInfo = await snapshotManager.getLatestSnapshotInfo();
+        
+        //respond with status and the snapshot info directly
+        res.json({
+            status: 'success',
+            snapshot: snapshotInfo, //the latest snapshot detials returned from service
             timestamp: new Date().toISOString()
         });
+        
+    } catch (error) {
+        next(error);
     }
+});
 
-    if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-        return res.status(408).json({
-            error: 'Request Timeout',
-            message: 'Atlas API request timed out - operation may still be in progress',
-            code: 'ATLAS_TIMEOUT',
+// Validate snapshot availability for deployment
+router.get('/validate', async (req, res, next) => {
+    try {
+        console.log('🔍 Validating snapshot availability...');
+        
+        //call service method that checks if snapshot is suitable
+        const validation = await snapshotManager.validateSnapshotAvailability();
+        
+        res.json({
+            status: 'success',
+            validation: {
+                isValid: validation.isValid,
+                totalSnapshots: validation.totalSnapshots,
+                latestSnapshot: validation.latestSnapshot,
+                //data about the latest snapshot
+                snapshotAge: validation.snapshotAge,
+                //age in milliseconds //convert age into hours (rounded) for easier reading
+                snapshotAgeHours: Math.round(validation.snapshotAge / (60 * 60 * 1000)),
+                recommendations: validation.snapshotAge > (24 * 60 * 60 * 1000) ? 
+                    ['Latest snapshot is over 24 hours old'] : 
+                    ['Snapshot is recent and ready for deployment']
+            },
+            sourceCluster: process.env.PRODUCTION_CLUSTER_NAME,
             timestamp: new Date().toISOString()
         });
+        
+    } catch (error) {
+        next(error);
     }
+});
 
-    // Handle validation errors
-    if (err.name === 'ValidationError') {
-        return res.status(400).json({
-            error: 'Validation Error',
-            message: err.message,
-            code: 'VALIDATION_ERROR',
+// Get snapshots for specific cluster (using exact Postman endpoint)
+router.get('/cluster/:clusterName', async (req, res, next) => {
+    try {
+        //extract clusterName param from the URL
+        const { clusterName } = req.params;
+        console.log(`📸 Getting snapshots for cluster: ${clusterName}`);
+        
+        //call atlasApi to get snapshots direclty from the requested cluster
+        const snapshots = await atlasApi.getClusterSnapshots(clusterName);
+        
+        res.json({
+            status: 'success',
+            clusterName: clusterName,
+            //fallback to empty array if no results
+            snapshots: snapshots.results || [],
+            //fallback to 0 if undefined
+            totalCount: snapshots.totalCount || 0,
             timestamp: new Date().toISOString()
         });
+        
+    } catch (error) {
+        next(error);
     }
+});
 
-    // Handle specific application errors
-    if (err.message.includes('No snapshots found')) {
-        return res.status(404).json({
-            error: 'No Snapshots Available',
-            message: 'No snapshots found for the production cluster',
-            code: 'NO_SNAPSHOTS_AVAILABLE',
-            recommendation: 'Ensure your production cluster has backup enabled and wait for first snapshot',
-            timestamp: new Date().toISOString()
-        });
-    }
-
-    if (err.message.includes('Cluster already exists')) {
-        return res.status(409).json({
-            error: 'Cluster Exists',
-            message: 'A cluster with this name already exists',
-            code: 'CLUSTER_NAME_CONFLICT',
-            recommendation: 'Use a different cluster name or delete the existing cluster',
-            timestamp: new Date().toISOString()
-        });
-    }
-
-    // Default server error
-    res.status(500).json({
-        error: 'Internal Server Error',
-        message: process.env.NODE_ENV === 'development' ? 
-            err.message : 
-            'An unexpected error occurred',
-        code: 'INTERNAL_ERROR',
-        timestamp: new Date().toISOString()
-    });
-};
+export default router
