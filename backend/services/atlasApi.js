@@ -152,36 +152,66 @@ class AtlasApiService {
         try {
             console.log(` Creating cluster: ${clusterName}`);
             
-            // Simplified cluster configuration object for sandbox environments
+            //cluster configuration object for sandbox environments
             const clusterConfig = {
-                name: clusterName,
-                clusterType: "REPLICASET",
-                mongoDBMajorVersion: "8.0",
-                backupEnabled: true,
-                paused: false,
-                pitEnabled: false,
-                terminationProtectionEnabled: false,
-                versionReleaseSystem: "LTS",
-                replicationSpecs: [{
-                    zoneName: "Zone 1",
-                    regionConfigs: [{
-                        priority: 7,
-                        regionName: options.region || "US_EAST_1",
-                        providerName: "AWS",
-                        autoScaling: {
-                            diskGB: { enabled: true },
-                            compute: { enabled: false }
-                        },
-                        electableSpecs: {
-                            nodeCount: 3,
-                            instanceSize: options.tier || "M2", //default instance tier or override
-                            diskSizeGB: 10
-                        },
-                        readOnlySpecs: { nodeCount: 0 },
-                        analyticsSpecs: { nodeCount: 0 }
-                    }]
-                }]
-            };
+                
+                    "backupEnabled": true,
+                    "biConnector": {
+                        "enabled": false
+                    },
+                    "clusterType": "REPLICASET",
+                    "globalClusterSelfManagedSharding": false,
+                    "mongoDBMajorVersion": "8.0",
+                    "name": "JUSTAIR-TEST-DEMO-CLUSTER",
+                    "paused": false,
+                    "pitEnabled": true,
+                    "redactClientLogData": true,
+                    "replicaSetScalingStrategy": "SEQUENTIAL",
+                    "terminationProtectionEnabled": false,
+                    "versionReleaseSystem": "LTS",
+                    "replicationSpecs": [
+                        {
+                            "zoneName": "Zone 1",
+                            "regionConfigs": [
+                                {
+                                    "priority": 7,
+                                    "regionName": "US_EAST_1",
+                                    "autoScaling": {
+                                        "diskGB": {
+                                            "enabled": true
+                                        },
+                                        "compute": {
+                                            "enabled": true,
+                                            "maxInstanceSize": "M40",
+                                            "minInstanceSize": "M30",
+                                            "scaleDownEnabled": true
+                                        },
+                                        "autoIndexing": {
+                                            "enabled": false
+                                        }
+                                    },
+                                    "providerName": "AWS",
+                                    "readOnlySpecs": {
+                                        "nodeCount": 0,
+                                        "diskSizeGB": 10,
+                                        "instanceSize": "M30"
+                                    },
+                                    "analyticsSpecs": {
+                                        "nodeCount": 0,
+                                        "diskSizeGB": 10,
+                                        "instanceSize": "M30"
+                                    },
+                                    "electableSpecs": {
+                                        "nodeCount": 3,
+                                        "diskSizeGB": 10,
+                                        "instanceSize": "M30"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            
             
             //POST req to create the lcuster with defined config
             const response = await this.client.post(`/groups/${this.groupId}/clusters`, clusterConfig);
