@@ -27,6 +27,8 @@ router.get('/', async (req, res, next) => {
     }
 });
 
+
+
 // Get specific cluster details
 router.get('/:clusterName', async (req, res, next) => {
     try {
@@ -50,5 +52,6 @@ router.get('/:clusterName', async (req, res, next) => {
         next(error);
     }
 });
+
 
 export default router;

@@ -61,7 +61,7 @@ router.get('/latest', async (req, res, next) => {
         //respond with status and the snapshot info directly
         res.json({
             status: 'success',
-            snapshot: snapshotInfo, //the latest snapshot detials returned from service
+            snapshot: snapshotInfo, //the latest snapshot details returned from service
             timestamp: new Date().toISOString()
         });
         

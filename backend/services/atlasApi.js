@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 //import your atlas authentication service to get and refresh OAuth tokens automatically
 import atlasAuth from './atlasAuth.js';
 
-// IMPORTANT: Load environment variables in the service file
+// iMPORTANT: Load environment variables in the service file
 dotenv.config();
 
 //
@@ -147,7 +147,7 @@ class AtlasApiService {
         }
     }
 
-    // Create cluster - Using simplified version of your Postman format
+    // Create cluster - using actual config from postman
     async createCluster(clusterName, options = {}) {
         try {
             console.log(` Creating cluster: ${clusterName}`);

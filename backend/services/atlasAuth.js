@@ -96,7 +96,7 @@ class AtlasAuthService {
 
     //mehtod to get a token that is gurranteed valid
     //returns existing token if valid
-    async getValidToken() {
+    async getValidToken() { // LOOK AT HERE
         if (!this.isTokenValid()) { //if no valid token, then return a new one and store it
             await this.getAuthToken();
         }
@@ -104,7 +104,7 @@ class AtlasAuthService {
     }
 
     //method to forcibly refresh the token, orgnoring the current otken status
-    async refreshToken() {
+    async refreshToken() { //look at here
         //clear stored token and expiry info
         this.accessToken = null;
         this.tokenExpiry = null;
