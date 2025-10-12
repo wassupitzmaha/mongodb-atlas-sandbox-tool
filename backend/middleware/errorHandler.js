@@ -8,7 +8,7 @@ const errorHandler = (err, req, res, next) => {
         timestamp: new Date().toISOString()
     });
 
-    //handle specific Atlas API errors ( from Postman colelction responses )
+    //handle specific Atlas API errors ( from Postman collection responses )
     if (err.response) {
         const { status, data } = err.response;
         

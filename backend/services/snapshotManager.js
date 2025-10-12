@@ -10,7 +10,6 @@ class SnapshotManager {
         this.productionCluster = process.env.PRODUCTION_CLUSTER_NAME;
     }
 
-    // Validate snapshot availability before deployment
     async validateSnapshotAvailability() {
         try {
             const snapshots = await atlasApi.getClusterSnapshots(this.productionCluster);
@@ -22,9 +21,6 @@ class SnapshotManager {
             const latestSnapshot = snapshots.results[0];
             const snapshotAge = Date.now() - new Date(latestSnapshot.createdAt).getTime();
             
-            console.log(` Snapshot validation passed`);
-            console.log(` Latest snapshot: ${latestSnapshot.id}`);
-            
             return {
                 isValid: true,
                 latestSnapshot: latestSnapshot,
@@ -32,7 +28,45 @@ class SnapshotManager {
                 snapshotAge: snapshotAge
             };
         } catch (error) {
-            console.error(' Snapshot validation failed:', error.message);
+            console.error('Snapshot validation failed:', error.message);
+            throw error;
+        }
+    }
+
+    
+    async getAvailableSnapshots() {
+        try {
+            console.log(`📸 Fetching all snapshots from ${this.productionCluster}...`);
+            
+            const snapshots = await atlasApi.getClusterSnapshots(this.productionCluster);
+            
+            return {
+                totalSnapshots: snapshots.totalCount || 0,
+                snapshots: snapshots.results || [],
+                latestSnapshot: snapshots.results?.[0] || null
+            };
+        } catch (error) {
+            console.error(' Failed to get available snapshots:', error.message);
+            throw error;
+        }
+    }
+    async getLatestSnapshotInfo() {
+        try {
+            console.log(`📷 Getting latest snapshot from ${this.productionCluster}...`);
+            
+            const latestSnapshot = await atlasApi.getLatestSnapshot();
+            
+            return {
+                id: latestSnapshot.id,
+                createdAt: latestSnapshot.createdAt,
+                description: latestSnapshot.description,
+                sizeGB: (latestSnapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2),
+                type: latestSnapshot.type,
+                status: latestSnapshot.status,
+                clusterId: latestSnapshot.clusterId
+            };
+        } catch (error) {
+            console.error(' Failed to get latest snapshot info:', error.message);
             throw error;
         }
     }
