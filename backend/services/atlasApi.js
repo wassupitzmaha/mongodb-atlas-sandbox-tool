@@ -22,17 +22,18 @@ class AtlasApiService {
         // Create axios instance configured with the baseURL and timeout for reuse
         this.client = axios.create({
             baseURL: this.baseUrl,
-            timeout: 60000, //timeout all reqs after 60 ecds to prevent hanging calls
+            timeout: 60000, //wait this much for response 
         });
 
         // Add request interceptor to inject authentication headers into every reqs
+        //adds authentication to every request automatically
         this.client.interceptors.request.use(async (config) => {
             //get valid OAuth headers (Bearer token, correct content-type) from atlasAuth service
-            const authHeaders = await atlasAuth.getAuthHeader();
+            const authHeaders = await atlasAuth.getAuthHeader(); //the await since it might need to refresh the token
             //merge these headers into the req config's headers
             config.headers = { ...config.headers, ...authHeaders };
             //return the udpated config so the req continues
-            return config;
+            return config; // axios uses this modified config to add authentication to every request
         });
 
         // Add axios response interceptor for token refresh
@@ -162,7 +163,7 @@ class AtlasApiService {
                     "clusterType": "REPLICASET",
                     "globalClusterSelfManagedSharding": false,
                     "mongoDBMajorVersion": "8.0",
-                    "name": "JUSTAIR-TEST-DEMO-CLUSTER",
+                    "name": clusterName,
                     "paused": false,
                     "pitEnabled": true,
                     "redactClientLogData": true,
