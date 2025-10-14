@@ -94,7 +94,7 @@ class AtlasApiService {
         }
     }
 
-    // Get a list of snapshots for a specific cluster - Exact Postman format
+    // Get a list of snapshots for a specific cluster - Exact Postman forma, makes the HTTP req to the mongodb atlast
     async getClusterSnapshots(clusterName = this.productionCluster) {
         try {
             console.log(` Getting snapshots for cluster: ${clusterName}`);

@@ -11,20 +11,23 @@ dotenv.config();
 //creat an express router instance to modularize this set of routes
 const router = express.Router();
 
-// Get all available snapshots from production cluster
+// Get all available snapshots from production cluster, route handler
 router.get('/available', async (req, res, next) => {
     try {
         console.log(`📸 Getting available snapshots from ${process.env.PRODUCTION_CLUSTER_NAME}...`);
 
         //await the async call to get all available snapshots via snapshotManager
+        //calls the service method getAvailableSnapshots
+        //inside that service method, it calls atlasApi.getClusterSnapshots()
+        //and then stores the results: const snapshots =...
         const snapshots = await snapshotManager.getAvailableSnapshots();
         //Respond with JSON containing metadata and a mapped list of snapshots
-        res.json({
+        res.json({ //converts javascript object to json string
             status: 'success',
             sourceCluster: process.env.PRODUCTION_CLUSTER_NAME,
 
             //map over each snapshot to select and reformat relevant fields for API response
-            totalSnapshots: snapshots.totalSnapshots,
+            totalSnapshots: snapshots.totalSnapshots, //came from snapshotsManager.js  
             snapshots: snapshots.snapshots.map(snapshot => ({
                 id: snapshot.id,
                 createdAt: snapshot.createdAt,
@@ -37,7 +40,7 @@ router.get('/available', async (req, res, next) => {
             })),
 
             //include info about latest snapshot if one even exits, or null otherwise
-            latestSnapshot: snapshots.latestSnapshot ? {
+            latestSnapshot: snapshots.latestSnapshot ? { //conditional expression
                 id: snapshots.latestSnapshot.id,
                 createdAt: snapshots.latestSnapshot.createdAt,
                 sizeGB: (snapshots.latestSnapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2)
@@ -87,7 +90,7 @@ router.get('/validate', async (req, res, next) => {
                 //data about the latest snapshot
                 snapshotAge: validation.snapshotAge,
                 //age in milliseconds //convert age into hours (rounded) for easier reading
-                snapshotAgeHours: Math.round(validation.snapshotAge / (60 * 60 * 1000)),
+                snapshotAgeHours: Math.round(validation.snapshotAge / (60 * 60 * 1000)), //converst milliseconds to hours
                 recommendations: validation.snapshotAge > (24 * 60 * 60 * 1000) ? 
                     ['Latest snapshot is over 24 hours old'] : 
                     ['Snapshot is recent and ready for deployment']
@@ -104,12 +107,12 @@ router.get('/validate', async (req, res, next) => {
 // Get snapshots for specific cluster (using exact Postman endpoint)
 router.get('/cluster/:clusterName', async (req, res, next) => {
     try {
-        //extract clusterName param from the URL
-        const { clusterName } = req.params;
+        //extract clusterName param from the URL, req.params is a object containign all URL parameters
+        const { clusterName } = req.params;// req.params = { clusterName: "JustAir-dedicated-cluster"}
         console.log(`📸 Getting snapshots for cluster: ${clusterName}`);
         
         //call atlasApi to get snapshots direclty from the requested cluster
-        const snapshots = await atlasApi.getClusterSnapshots(clusterName);
+        const snapshots = await atlasApi.getClusterSnapshots(clusterName); //calls atlasApi directly instead of through snapshotManager
         
         res.json({
             status: 'success',
