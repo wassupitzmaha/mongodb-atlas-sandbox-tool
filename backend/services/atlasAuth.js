@@ -31,7 +31,7 @@ class AtlasAuthService {
         if (!this.authUrl) {
             throw new Error('ATLAS_AUTH_URL environment variable is required');
         }
-        
+        //avoiding requesting toekn for every new api call
         //internal storage for the oauth access token (initially null)
         this.accessToken = null;
         //internal storage for token expiry timestamp (milliseconds), initially null
@@ -103,7 +103,7 @@ class AtlasAuthService {
         return this.accessToken;
     }
 
-    //method to forcibly refresh the token, orgnoring the current otken status
+    //method to forcibly refresh the token, irgnoring the current token status
     async refreshToken() { //look at here
         //clear stored token and expiry info
         this.accessToken = null;

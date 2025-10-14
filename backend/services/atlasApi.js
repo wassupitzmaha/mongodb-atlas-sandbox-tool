@@ -245,7 +245,7 @@ class AtlasApiService {
             console.log(`Cluster deletion initiated: ${clusterName}`);
             return response.data;
         } catch (error) {
-            if (error.response?.status === 404) {
+            if (error.response?.status === 404) {// checkin if cluster is already deleted or not
                 console.log(` Cluster ${clusterName} already deleted or not found`);
                 return { message: 'Cluster not found (may already be deleted)' };
             }
@@ -259,7 +259,7 @@ class AtlasApiService {
         //convert maximum wait time from mins to milliseconds for timing logic
         const maxWaitMs = maxWaitMinutes * 60 * 1000;
 
-        //set polling interval to 30 seconds ot avoid hitting rate limits unnecessarily
+        //set polling interval to 30 seconds ot avoid hitting rate limits unnecessarily; how often to check status 
         const pollInterval = 30000; // 30 seconds
 
         //record start time for timeout calculation

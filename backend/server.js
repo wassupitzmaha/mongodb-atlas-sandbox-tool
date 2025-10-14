@@ -118,39 +118,39 @@ app.use('*', (req, res) => {
 async function startServer() {
     try {
         // Test Atlas connection on startup
-        console.log('🔐 Testing Atlas connection...');
+        console.log(' Testing Atlas connection...');
         await atlasAuth.getAuthToken();
-        console.log('✅ Atlas connection successful');
+        console.log('Atlas connection successful');
         
         // CHANGE THIS SECTION - Make it non-fatal
         try {
-            console.log('🔍 Testing production cluster access...');
+            console.log(' Testing production cluster access...');
             const prodCluster = await atlasApi.getCluster(process.env.PRODUCTION_CLUSTER_NAME);
-            console.log(`✅ Production cluster accessible: ${prodCluster.name} (${prodCluster.stateName})`);
+            console.log(`Production cluster accessible: ${prodCluster.name} (${prodCluster.stateName})`);
             
-            console.log('📸 Testing snapshot availability...');
+            console.log(' Testing snapshot availability...');
             const validation = await snapshotManager.validateSnapshotAvailability();
-            console.log(`✅ ${validation.totalSnapshots} snapshots available`);
+            console.log(`${validation.totalSnapshots} snapshots available`);
         } catch (validationError) {
             // Don't kill server if validation fails
-            console.warn('⚠️  Startup validation failed (non-fatal):');
+            console.warn('Startup validation failed (non-fatal):');
             console.warn(`   ${validationError.message}`);
             console.warn('   Server will start anyway...\n');
         }
         
         // Start server listening on the specified port
         app.listen(PORT, () => {
-            console.log(`\n✅ Atlas Sandbox Server running on port ${PORT}`);
-            console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-            console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-            console.log(`🎯 Production cluster: ${process.env.PRODUCTION_CLUSTER_NAME}`);
-            console.log(`🚀 Ready to deploy sandbox environments!\n`);
+            console.log(`\n Atlas Sandbox Server running on port ${PORT}`);
+            console.log(` Environment: ${process.env.NODE_ENV}`);
+            console.log(` Health check: http://localhost:${PORT}/api/health`);
+            console.log(` Production cluster: ${process.env.PRODUCTION_CLUSTER_NAME}`);
+            console.log(`Ready to deploy sandbox environments!\n`);
         });
         
     } catch (error) {
         // Only fatal errors reach here (auth failure, etc.)
-        console.error('❌ Server startup failed:', error.message);
-        console.error('⚠️  Please check your Atlas credentials and network connectivity');
+        console.error(' Server startup failed:', error.message);
+        console.error('  Please check your Atlas credentials and network connectivity');
         process.exit(1);
     }
 }
