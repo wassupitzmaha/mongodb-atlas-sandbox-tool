@@ -312,84 +312,33 @@ class AtlasApiService {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    // Create restore job on Atlas cluster from snapshot (Atlas REST API)
     async createRestoreJob(targetClusterName, snapshotId) {
         try {
-            console.log(` Creating restore job for cluster: ${targetClusterName}`);
-            console.log(`Using snapshot: ${snapshotId}`);
+            // Source cluster is always JUSTAIR-TEST-DEMO-CLUSTER (production)
+            const sourceCluster = this.productionCluster;
             
-            //payload describing what snapshot and cluster to use for restore
+            console.log(`📦 Creating restore job...`);
+            console.log(`   Source Cluster: ${sourceCluster}`);
+            console.log(`   Target Cluster: ${targetClusterName}`);
+            console.log(`   Snapshot ID: ${snapshotId}`);
+            
+            // Correct payload structure for automated restore
             const restorePayload = {
-                snapshotId: snapshotId,
-                targetClusterName: targetClusterName,
-                targetGroupId: this.groupId
+                deliveryType: "automated",              // CRITICAL: Must be "automated"
+                targetClusterName: targetClusterName,   // Where to restore data
+                targetGroupId: this.groupId,            // Your Atlas project ID
+                snapshotId: snapshotId                  // Which snapshot to restore
             };
-            //POST req to atlas api starting the restore job
+            
+            // IMPORTANT: Post to SOURCE cluster endpoint (where snapshot lives)
             const response = await this.client.post(
-                `/groups/${this.groupId}/clusters/${targetClusterName}/backup/restoreJobs`,
+                `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs`,
                 restorePayload
             );
 
-            console.log(` Restore job created successfully`);
-            console.log(`Restore job ID: ${response.data.id}`);
-            
-            //return data about the restore job to caller
-            return response.data;
-        } catch (error) {
-            console.error(`Failed to create restore job:`, error.response?.data || error.message);
-            throw error;
-        }
-    }
+            console.log('Restore job created successfully')
 
-    // Wait for restore job completion, poll for completion of a restore job given its job ID
-    async waitForRestoreCompletion(targetClusterName, restoreJobId, maxWaitMinutes = 10) {
-        //convert max wait time to ms
-        const maxWaitMs = maxWaitMinutes * 60 * 1000;
-        //set polling frequencry to 15 sec
-        const pollInterval = 15000; // 15 seconds
 
-        //record start time for timeout logic
-        const startTime = Date.now();
-
-        console.log(` Waiting for restore job ${restoreJobId} to complete...`);
-        //poll loop continues until timeout expires
-        while (Date.now() - startTime < maxWaitMs) {
-            try {
-
-                //fetch current restore job status from atlas api
-                const response = await this.client.get(
-                    `/groups/${this.groupId}/clusters/${targetClusterName}/backup/restoreJobs/${restoreJobId}`
-                );
-
-                const job = response.data;
-
-                //log current restore job status including delvery type and cancellation status
-                console.log(` Restore job status: ${job.deliveryType} - ${job.cancelled ? 'CANCELLED' : 'ACTIVE'}`);
-
-                //if job has a finished timestamp, its complete
-                if (job.finishedAt) {
-                    console.log(`Restore job completed at: ${job.finishedAt}`);
-                    //return job info for further processing if needed
-                    return job;
-                }
-                //if job is cancelled, stop polling and throw error
-                if (job.cancelled) {
-                    throw new Error(`Restore job was cancelled`);
-                }
-                //wait before next poll iteration
-                await this.delay(pollInterval);
-            } catch (error) {
-                if (error.response?.status === 404) {
-                    throw new Error(`Restore job ${restoreJobId} not found`);
-                }
-                throw error;
-            }
-        }
-
-        //throw timeout error if job doesn't complete in allotted time
-        throw new Error(`Timeout: Restore job did not complete within ${maxWaitMinutes} minutes`);
-    }
-}
 
 // Export both the class and a singleton instance
 export { AtlasApiService };

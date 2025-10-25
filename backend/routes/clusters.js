@@ -54,5 +54,55 @@ router.get('/:clusterName', async (req, res, next) => {
     }
 });
 
+// Create new cluster
+router.post('/', async (req, res, next) => {
+    try {
+        const { clusterName, config } = req.body;
+        
+        if (!clusterName) {
+            return res.status(400).json({
+                error: 'Bad Request',
+                message: 'clusterName is required',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        console.log(`🔨 Creating cluster: ${clusterName}`);
+        
+        const cluster = await atlasApi.createCluster(clusterName, config);
+        
+        res.status(202).json({
+            status: 'success',
+            message: 'Cluster creation initiated',
+            cluster: cluster,
+            estimatedTime: '10-15 minutes',
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Delete cluster
+router.delete('/:clusterName', async (req, res, next) => {
+    try {
+        const { clusterName } = req.params;
+        console.log(`🗑️ Deleting cluster: ${clusterName}`);
+        
+        const result = await atlasApi.deleteCluster(clusterName);
+        
+        res.json({
+            status: 'success',
+            message: `Cluster ${clusterName} deletion initiated`,
+            result: result,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        next(error);
+    }
+});
+
 
 export default router;
