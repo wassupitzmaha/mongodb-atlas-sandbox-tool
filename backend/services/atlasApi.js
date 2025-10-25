@@ -369,7 +369,43 @@ class AtlasApiService {
         console.log(`   Source Cluster: ${sourceCluster}`);
         console.log(`   Max wait: ${maxWaitMinutes} minutes`);
         console.log(`   Checking every 30 seconds...`);
-        
+        while (Date.now() - startTime < maxWaitMs) {
+            try {
+                // Query SOURCE cluster for restore job status
+                const response = await this.client.get(
+                    `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs/${restoreJobId}`
+                );
+    
+                const job = response.data;
+                const elapsedSeconds = Math.round((Date.now() - startTime) / 1000);
+                const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+                const remainingSeconds = elapsedSeconds % 60;
+                
+                console.log(`   ⏱️  Time elapsed: ${elapsedMinutes}m ${remainingSeconds}s`);
+                console.log(`   📊 Status: ${job.deliveryType} | Cancelled: ${job.cancelled}`);
+    
+                // Check if job completed successfully
+                if (job.finishedAt) {
+                    console.log(`✅ Restore job completed successfully!`);
+                    console.log(`   Finished at: ${job.finishedAt}`);
+                    console.log(`   Total time: ${elapsedMinutes}m ${remainingSeconds}s`);
+                    return job;
+                }
+                
+                // Check if job was cancelled
+                if (job.cancelled) {
+                    throw new Error(`Restore job was cancelled`);
+                }
+                
+                // Check for failed status (if API provides this field)
+                if (job.failed) {
+                    throw new Error(`Restore job failed: ${job.failureReason || 'Unknown reason'}`);
+                }
+                
+                console.log(`   ⏳ Still restoring... checking again in 30s`);
+                await this.delay(pollInterval);
+                
+            }
 
 // Export both the class and a singleton instance
 export { AtlasApiService };
