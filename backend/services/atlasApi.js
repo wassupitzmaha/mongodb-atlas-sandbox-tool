@@ -494,6 +494,28 @@ class AtlasApiService {
             throw error;
         }
     }
+async listRestoreJobs() {
+    try {
+        const sourceCluster = this.productionCluster;
+            
+        console.log(`📋 Listing all restore jobs from ${sourceCluster}...`);
+            
+        const response = await this.client.get(
+            `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs`
+        );
+            
+        console.log(`   Found ${response.data.totalCount || 0} restore jobs`);
+            
+        return {
+            totalCount: response.data.totalCount || 0,
+            jobs: response.data.results || [],
+            sourceCluster: sourceCluster
+        };
+        } catch (error) {
+            console.error(`❌ Failed to list restore jobs:`, error.response?.data || error.message);
+            throw error;
+        }
+    }
 // Export both the class and a singleton instance
 export { AtlasApiService };
 
