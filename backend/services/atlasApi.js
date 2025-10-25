@@ -325,8 +325,8 @@ class AtlasApiService {
             // Correct payload structure for automated restore
             const restorePayload = {
                 deliveryType: "automated",              // CRITICAL: Must be "automated"
-                targetClusterName: targetClusterName,   // Where to restore data
-                targetGroupId: this.groupId,            // Your Atlas project ID
+                targetClusterName: targetClusterName,   
+                targetGroupId: this.groupId,            
                 snapshotId: snapshotId                  // Which snapshot to restore
             };
             
@@ -335,9 +335,27 @@ class AtlasApiService {
                 `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs`,
                 restorePayload
             );
-
-            console.log('Restore job created successfully')
-
+    
+            console.log(`✅ Restore job created successfully`);
+            console.log(`   Job ID: ${response.data.id}`);
+            console.log(`   Delivery Type: ${response.data.deliveryType}`);
+            console.log(`   Status will be available at the source cluster`);
+            
+            return response.data;
+        } catch (error) {
+            console.error(`❌ Failed to create restore job:`, error.response?.data || error.message);
+            
+            // Add helpful error context
+            if (error.response?.status === 400) {
+                console.error(`   Possible causes:`);
+                console.error(`   - Target cluster not in IDLE state`);
+                console.error(`   - Invalid snapshot ID`);
+                console.error(`   - Target cluster doesn't exist`);
+            }
+            
+            throw error;
+        }
+    }
 
 
 // Export both the class and a singleton instance
