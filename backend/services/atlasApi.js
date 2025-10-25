@@ -465,6 +465,35 @@ class AtlasApiService {
         throw new Error(`Timeout: Restore job did not complete within ${maxWaitMinutes} minutes`);
     }
 
+    async getRestoreJobStatus(restoreJobId) {
+        try {
+            const sourceCluster = this.productionCluster;
+            
+            const response = await this.client.get(
+                `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs/${restoreJobId}`
+            );
+            
+            const job = response.data;
+            
+            return {
+                id: job.id,
+                deliveryType: job.deliveryType,
+                targetClusterName: job.targetClusterName,
+                snapshotId: job.snapshotId,
+                finishedAt: job.finishedAt,
+                cancelled: job.cancelled,
+                timestamp: job.timestamp,
+                createdAt: job.createdAt,
+                isComplete: !!job.finishedAt,
+                isActive: !job.finishedAt && !job.cancelled,
+                isCancelled: job.cancelled,
+                sourceCluster: sourceCluster
+            };
+        } catch (error) {
+            console.error(`❌ Failed to get restore job status:`, error.response?.data || error.message);
+            throw error;
+        }
+    }
 // Export both the class and a singleton instance
 export { AtlasApiService };
 
