@@ -405,7 +405,16 @@ class AtlasApiService {
                 console.log(`   ⏳ Still restoring... checking again in 30s`);
                 await this.delay(pollInterval);
                 
+            }catch (error) {
+                if (error.response?.status === 404) {
+                    throw new Error(`Restore job ${restoreJobId} not found on source cluster ${sourceCluster}`);
+                }
+                throw error;
             }
+        }
+    
+        throw new Error(`Timeout: Restore job did not complete within ${maxWaitMinutes} minutes`);
+    }
 
 // Export both the class and a singleton instance
 export { AtlasApiService };
