@@ -356,7 +356,20 @@ class AtlasApiService {
             throw error;
         }
     }
-
+    async waitForRestoreCompletion(restoreJobId, maxWaitMinutes = 15) {
+        const maxWaitMs = maxWaitMinutes * 60 * 1000;
+        const pollInterval = 30000; // 30 seconds (avoid rate limits)
+        const startTime = Date.now();
+        
+        // Always check on source cluster (where snapshot lives)
+        const sourceCluster = this.productionCluster;
+    
+        console.log(`⏳ Waiting for restore job to complete...`);
+        console.log(`   Job ID: ${restoreJobId}`);
+        console.log(`   Source Cluster: ${sourceCluster}`);
+        console.log(`   Max wait: ${maxWaitMinutes} minutes`);
+        console.log(`   Checking every 30 seconds...`);
+        
 
 // Export both the class and a singleton instance
 export { AtlasApiService };
