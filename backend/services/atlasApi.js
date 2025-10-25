@@ -317,50 +317,6 @@ class AtlasApiService {
             // Source cluster is always JUSTAIR-TEST-DEMO-CLUSTER (production)
             const sourceCluster = this.productionCluster;
             
-            console.log(`📦 Creating restore job...`);
-            console.log(`   Source Cluster: ${sourceCluster}`);
-            console.log(`   Target Cluster: ${targetClusterName}`);
-            console.log(`   Snapshot ID: ${snapshotId}`);
-            
-            // Correct payload structure for automated restore
-            const restorePayload = {
-                deliveryType: "automated",              // CRITICAL: Must be "automated"
-                targetClusterName: targetClusterName,   
-                targetGroupId: this.groupId,            
-                snapshotId: snapshotId                  // Which snapshot to restore
-            };
-            
-            // IMPORTANT: Post to SOURCE cluster endpoint (where snapshot lives)
-            const response = await this.client.post(
-                `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs`,
-                restorePayload
-            );
-    
-            console.log(` Restore job created successfully`);
-            console.log(`   Job ID: ${response.data.id}`);
-            console.log(`   Delivery Type: ${response.data.deliveryType}`);
-            console.log(`   Status will be available at the source cluster`);
-            
-            return response.data;
-        } catch (error) {
-            console.error(` Failed to create restore job:`, error.response?.data || error.message);
-            
-            // Add helpful error context
-            if (error.response?.status === 400) {
-                console.error(`   Possible causes:`);
-                console.error(`   - Target cluster not in IDLE state`);
-                console.error(`   - Invalid snapshot ID`);
-                console.error(`   - Target cluster doesn't exist`);
-            }
-            
-            throw error;
-        }
-    }
-    async createRestoreJob(targetClusterName, snapshotId) {
-        try {
-            // Source cluster is always JUSTAIR-TEST-DEMO-CLUSTER (production)
-            const sourceCluster = this.productionCluster;
-            
             console.log(` Creating restore job...`);
             console.log(`   Source Cluster: ${sourceCluster}`);
             console.log(`   Target Cluster: ${targetClusterName}`);
@@ -412,7 +368,7 @@ class AtlasApiService {
         // Always check on source cluster (where snapshot lives)
         const sourceCluster = this.productionCluster;
     
-        console.log(` Waiting for restore job to complete...`);
+        console.log(`Waiting for restore job to complete...`);
         console.log(`   Job ID: ${restoreJobId}`);
         console.log(`   Source Cluster: ${sourceCluster}`);
         console.log(`   Max wait: ${maxWaitMinutes} minutes`);
@@ -464,7 +420,10 @@ class AtlasApiService {
     
         throw new Error(`Timeout: Restore job did not complete within ${maxWaitMinutes} minutes`);
     }
-
+    
+    // =============================================================================
+    // NEW METHOD: Get Restore Job Status (for manual polling)
+    // =============================================================================
     async getRestoreJobStatus(restoreJobId) {
         try {
             const sourceCluster = this.productionCluster;
@@ -490,32 +449,37 @@ class AtlasApiService {
                 sourceCluster: sourceCluster
             };
         } catch (error) {
-            console.error(`❌ Failed to get restore job status:`, error.response?.data || error.message);
+            console.error(` Failed to get restore job status:`, error.response?.data || error.message);
             throw error;
         }
     }
-async listRestoreJobs() {
-    try {
-        const sourceCluster = this.productionCluster;
+    
+    // =============================================================================
+    // NEW METHOD: List all restore jobs (helpful for debugging)
+    // =============================================================================
+    async listRestoreJobs() {
+        try {
+            const sourceCluster = this.productionCluster;
             
-        console.log(`📋 Listing all restore jobs from ${sourceCluster}...`);
+            console.log(`📋 Listing all restore jobs from ${sourceCluster}...`);
             
-        const response = await this.client.get(
-            `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs`
-        );
+            const response = await this.client.get(
+                `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs`
+            );
             
-        console.log(`   Found ${response.data.totalCount || 0} restore jobs`);
+            console.log(`   Found ${response.data.totalCount || 0} restore jobs`);
             
-        return {
-            totalCount: response.data.totalCount || 0,
-            jobs: response.data.results || [],
-            sourceCluster: sourceCluster
-        };
+            return {
+                totalCount: response.data.totalCount || 0,
+                jobs: response.data.results || [],
+                sourceCluster: sourceCluster
+            };
         } catch (error) {
-            console.error(`❌ Failed to list restore jobs:`, error.response?.data || error.message);
+            console.error(` Failed to list restore jobs:`, error.response?.data || error.message);
             throw error;
         }
     }
+}
 // Export both the class and a singleton instance
 export { AtlasApiService };
 
