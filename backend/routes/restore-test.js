@@ -43,3 +43,32 @@ router.post('/restore', async (req, res, next) => {
                 }
             });
         }
+        
+        console.log(`🔄 Starting restore process...`);
+        console.log(`   Target Cluster: ${targetClusterName}`);
+        
+        // Step 1: Get snapshot ID (use latest if not provided)
+        let snapshotToRestore = snapshotId;
+        if (!snapshotToRestore) {
+            console.log('📸 No snapshot ID provided, fetching latest...');
+            const latestSnapshot = await atlasApi.getLatestSnapshot();
+            snapshotToRestore = latestSnapshot.id;
+            console.log(`   Using latest snapshot: ${snapshotToRestore}`);
+        }
+        
+        // Step 2: Verify target cluster exists and is IDLE
+        console.log('🔍 Checking target cluster status...');
+        try {
+            const targetCluster = await atlasApi.getCluster(targetClusterName);
+            
+            if (targetCluster.stateName !== 'IDLE') {
+                return res.status(400).json({
+                    error: 'Cluster Not Ready',
+                    message: `Target cluster is in state: ${targetCluster.stateName}`,
+                    detail: 'Cluster must be in IDLE state before restoring',
+                    currentState: targetCluster.stateName,
+                    suggestion: targetCluster.stateName === 'CREATING' ? 
+                        'Wait for cluster creation to complete (10-15 minutes)' :
+                        'Check cluster status and try again when IDLE'
+                });
+            }
