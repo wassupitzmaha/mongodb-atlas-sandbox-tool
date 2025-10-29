@@ -224,4 +224,32 @@ router.get('/status/:restoreJobId', async (req, res, next) => {
             next(error);
         }
     });
+    router.get('/jobs', async (req, res, next) => {
+        try {
+            console.log(`📋 Listing all restore jobs...`);
+            
+            const jobs = await atlasApi.listRestoreJobs();
+            
+            res.json({
+                status: 'success',
+                sourceCluster: process.env.PRODUCTION_CLUSTER_NAME,
+                totalJobs: jobs.totalCount,
+                jobs: jobs.jobs.map(job => ({
+                    id: job.id,
+                    targetClusterName: job.targetClusterName,
+                    snapshotId: job.snapshotId,
+                    deliveryType: job.deliveryType,
+                    createdAt: job.timestamp || job.createdAt,
+                    finishedAt: job.finishedAt,
+                    cancelled: job.cancelled,
+                    isComplete: !!job.finishedAt
+                })),
+                timestamp: new Date().toISOString()
+            });
+            
+        } catch (error) {
+            next(error);
+        }
+    });
     
+    export default router;
