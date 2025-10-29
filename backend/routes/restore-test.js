@@ -27,3 +27,19 @@ router.get('/latest-snapshot', async (req, res, next) => {
         next(error);
     }
 });
+
+router.post('/restore', async (req, res, next) => {
+    try {
+        const { targetClusterName, snapshotId } = req.body;
+        
+        // Validation
+        if (!targetClusterName) {
+            return res.status(400).json({
+                error: 'Bad Request',
+                message: 'targetClusterName is required',
+                example: {
+                    targetClusterName: 'RESTORE-TEST-001',
+                    snapshotId: 'optional - uses latest if not provided'
+                }
+            });
+        }
