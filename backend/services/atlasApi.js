@@ -357,9 +357,7 @@ class AtlasApiService {
         }
     }
     
-    // =============================================================================
-    // FIXED METHOD 2: Wait for Restore Completion
-    // =============================================================================
+
     async waitForRestoreCompletion(restoreJobId, maxWaitMinutes = 15) {
         const maxWaitMs = maxWaitMinutes * 60 * 1000;
         const pollInterval = 30000; // 30 seconds (avoid rate limits)
@@ -421,9 +419,7 @@ class AtlasApiService {
         throw new Error(`Timeout: Restore job did not complete within ${maxWaitMinutes} minutes`);
     }
     
-    // =============================================================================
-    // NEW METHOD: Get Restore Job Status (for manual polling)
-    // =============================================================================
+    //for manual testing
     async getRestoreJobStatus(restoreJobId) {
         try {
             const sourceCluster = this.productionCluster;
@@ -454,9 +450,7 @@ class AtlasApiService {
         }
     }
     
-    // =============================================================================
-    // NEW METHOD: List all restore jobs (helpful for debugging)
-    // =============================================================================
+//listing all restore jobs
     async listRestoreJobs() {
         try {
             const sourceCluster = this.productionCluster;
