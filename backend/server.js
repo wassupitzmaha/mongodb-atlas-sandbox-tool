@@ -13,10 +13,12 @@ import atlasAuth from './services/atlasAuth.js';
 import atlasApi from './services/atlasApi.js';
 import snapshotManager from './services/snapshotManager.js';
 
+
 // Import our route handler - these define what happens when someone calls our API endpoints
 import authRoutes from './routes/auth.js';
 import clusterRoutes from './routes/clusters.js';
 import snapshotRoutes from './routes/snapshots.js';
+import restoreTestRoutes from './routes/restore-test.js';
 
 // Import custom middleware
 import errorHandler from './middleware/errorHandler.js';
@@ -102,6 +104,7 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/auth', authRoutes); //authentication routes
 app.use('/api/clusters', atlasAuthMiddleware, clusterRoutes); //cluster routes (with auth middleware)
 app.use('/api/snapshots', atlasAuthMiddleware, snapshotRoutes); //snapshot routes (with auth middelware)
+app.use('/api/restore-test', atlasAuthMiddleware, restoreTestRoutes);
 
 // Global error handler (must be last)
 app.use(errorHandler);
