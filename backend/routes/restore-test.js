@@ -72,3 +72,50 @@ router.post('/restore', async (req, res, next) => {
                         'Check cluster status and try again when IDLE'
                 });
             }
+            
+            console.log(`✅ Target cluster is IDLE and ready for restore`);
+            
+        } catch (error) {
+            if (error.response?.status === 404) {
+                return res.status(404).json({
+                    error: 'Target Cluster Not Found',
+                    message: `Cluster ${targetClusterName} does not exist`,
+                    suggestion: 'Create the cluster first: POST /api/clusters',
+                    example: {
+                        clusterName: targetClusterName
+                    }
+                });
+            }
+            throw error;
+        }
+        
+        // Step 3: Create restore job
+        console.log('📦 Creating restore job...');
+        const restoreJob = await atlasApi.createRestoreJob(
+            targetClusterName,
+            snapshotToRestore
+        );
+        
+        res.status(202).json({
+            status: 'success',
+            message: 'Restore job created successfully',
+            restoreJob: {
+                id: restoreJob.id,
+                deliveryType: restoreJob.deliveryType,
+                targetClusterName: restoreJob.targetClusterName,
+                snapshotId: restoreJob.snapshotId,
+                createdAt: restoreJob.timestamp || new Date().toISOString()
+            },
+            sourceCluster: process.env.PRODUCTION_CLUSTER_NAME,
+            nextSteps: [
+                `Poll status: GET /api/restore-test/status/${restoreJob.id}`,
+                `Estimated time: 5-10 minutes`,
+                `Check every 30 seconds until complete`
+            ],
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        next(error);
+    }
+});
