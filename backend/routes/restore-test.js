@@ -119,3 +119,27 @@ router.post('/restore', async (req, res, next) => {
         next(error);
     }
 });
+
+router.get('/status/:restoreJobId', async (req, res, next) => {
+    try {
+        const { restoreJobId } = req.params;
+        
+        console.log(`🔍 Checking restore job status: ${restoreJobId}`);
+        
+        const status = await atlasApi.getRestoreJobStatus(restoreJobId);
+        
+        res.json({
+            status: 'success',
+            restoreJob: status,
+            isComplete: status.isComplete,
+            isActive: status.isActive,
+            message: status.isComplete ? 
+                '✅ Restore completed! Your cluster is ready to use.' : 
+                '⏳ Restore still in progress... poll this endpoint again in 30s',
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        next(error);
+    }
+});
