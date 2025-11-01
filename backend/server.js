@@ -46,7 +46,7 @@ for (const envVar of requiredEnvVars) {
 
 // create Express application
 const app = express();
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3006;
 
 // configure cors middleware , this allows our react app to call our api
 app.use(cors({

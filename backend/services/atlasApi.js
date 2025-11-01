@@ -326,7 +326,7 @@ class AtlasApiService {
             const restorePayload = {
                 deliveryType: "automated",              // CRITICAL: Must be "automated"
                 targetClusterName: targetClusterName,   // Where to restore data
-                targetGroupId: this.groupId,            // Your Atlas project ID
+                targetGroupId: this.groupId,            //Our atlas project id
                 snapshotId: snapshotId                  // Which snapshot to restore
             };
             
@@ -360,7 +360,7 @@ class AtlasApiService {
 
     async waitForRestoreCompletion(restoreJobId, maxWaitMinutes = 15) {
         const maxWaitMs = maxWaitMinutes * 60 * 1000;
-        const pollInterval = 30000; // 30 seconds (avoid rate limits)
+        const pollInterval = 30000; // 30 seconds (to avoid rate limits)
         const startTime = Date.now();
         
         // Always check on source cluster (where snapshot lives)
