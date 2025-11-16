@@ -556,6 +556,20 @@ class AtlasApiService {
         throw new Error(`Timeout: Cluster ${clusterName} did not reach IDLE within ${maxWaitMinutes} minutes`);
     }
 
+    * Check if cluster exists
+    */
+   async clusterExists(clusterName) {
+       try {
+           await this.getCluster(clusterName);
+           return true;
+       } catch (error) {
+           if (error.response?.status === 404) {
+               return false;
+           }
+           throw error; // Re-throw unexpected errors
+       }
+   }
+
 
 
 }
