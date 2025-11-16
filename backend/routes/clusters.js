@@ -154,7 +154,7 @@ router.post('/:clusterName/restore', async (req, res, next) => {
             });
         }
         if (currentState !== 'IDLE' || isPaused) {
-            console.log(`⏳ Cluster not ready, waiting for IDLE state...`);
+            console.log(` Cluster not ready, waiting for IDLE state...`);
             
             const stateMessages = {
                 'CREATING': 'Cluster is being created (10-15 minutes)',
@@ -166,7 +166,7 @@ router.post('/:clusterName/restore', async (req, res, next) => {
             console.log(`   ${stateMessages[currentState] || 'Waiting for cluster to be ready'}`);
             
             await atlasApi.waitForClusterIdle(clusterName, 15);
-            console.log(`✅ Cluster is now IDLE and ready!`);
+            console.log(` Cluster is now IDLE and ready!`);
         }
     }})
 
