@@ -473,6 +473,8 @@ class AtlasApiService {
             throw error;
         }
     }
+
+
     async resumeCluster(clusterName) {
         try {
             console.log(`▶️ Resuming cluster: ${clusterName}`);
@@ -491,6 +493,8 @@ class AtlasApiService {
             throw error;
         }
     }
+
+
     async waitForClusterIdle(clusterName, maxWaitMinutes = 15) {
         const maxWaitMs = maxWaitMinutes * 60 * 1000;
         const pollInterval = 30000; // 30 seconds
@@ -509,7 +513,7 @@ class AtlasApiService {
                 const elapsedSeconds = Math.round((Date.now() - startTime) / 1000);
                 const elapsedMinutes = Math.floor(elapsedSeconds / 60);
                 const remainingSeconds = elapsedSeconds % 60;
-
+                
                 console.log(`   ⏱️  ${elapsedMinutes}m ${remainingSeconds}s - State: ${currentState}${isPaused ? ' (PAUSED)' : ''}`);
 
                 // Handle PAUSED state - resume and continue waiting
@@ -521,29 +525,29 @@ class AtlasApiService {
                     continue;
                 }
 
-                
+                // Check if IDLE
                 if (currentState === 'IDLE') {
                     console.log(`   ✅ Cluster ${clusterName} is now IDLE!`);
                     console.log(`   ⏱️  Total wait time: ${elapsedMinutes}m ${remainingSeconds}s`);
                     return cluster;
                 }
 
-    
-                            if (currentState === 'CREATION_FAILED') {
-                                throw new Error(`Cluster creation failed`);
-                            }
-                            
-                            if (currentState === 'DELETED' || currentState === 'DELETING') {
-                                throw new Error(`Cluster is being deleted or has been deleted`);
-                            }
-            
-                            // Valid transitional states: CREATING, REPAIRING, UPDATING
-                            const validStates = ['CREATING', 'REPAIRING', 'UPDATING'];
-                            if (!validStates.includes(currentState)) {
-                                console.warn(`   ⚠️  Unexpected state: ${currentState}`);
-                            }
+                // Check for error states
+                if (currentState === 'CREATION_FAILED') {
+                    throw new Error(`Cluster creation failed`);
+                }
+                
+                if (currentState === 'DELETED' || currentState === 'DELETING') {
+                    throw new Error(`Cluster is being deleted or has been deleted`);
+                }
 
-                                        // Wait before next poll
+                // Valid transitional states: CREATING, REPAIRING, UPDATING
+                const validStates = ['CREATING', 'REPAIRING', 'UPDATING'];
+                if (!validStates.includes(currentState)) {
+                    console.warn(`   ⚠️  Unexpected state: ${currentState}`);
+                }
+
+                // Wait before next poll
                 await this.delay(pollInterval);
             } catch (error) {
                 if (error.response?.status === 404) {
@@ -556,19 +560,18 @@ class AtlasApiService {
         throw new Error(`Timeout: Cluster ${clusterName} did not reach IDLE within ${maxWaitMinutes} minutes`);
     }
 
-    * Check if cluster exists
-    */
-   async clusterExists(clusterName) {
-       try {
-           await this.getCluster(clusterName);
-           return true;
-       } catch (error) {
-           if (error.response?.status === 404) {
-               return false;
-           }
-           throw error; // Re-throw unexpected errors
-       }
-   }
+
+    async clusterExists(clusterName) {
+        try {
+            await this.getCluster(clusterName);
+            return true;
+        } catch (error) {
+            if (error.response?.status === 404) {
+                return false;
+            }
+            throw error; // 
+        }
+    }
 
 
 
