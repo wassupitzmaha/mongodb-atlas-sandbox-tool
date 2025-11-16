@@ -215,7 +215,16 @@ router.post('/:clusterName/restore', async (req, res, next) => {
         next(error);
     }
 });
-    }})
+router.get('/:clusterName/restore/status', async (req, res, next) => {
+    try {
+        let { clusterName } = req.params;
+        
+        // Auto-add SANDBOX- prefix if not present
+        if (!clusterName.startsWith('SANDBOX-')) {
+            clusterName = `SANDBOX-${clusterName}`;
+        }
+
+        console.log(`🔍 Checking restore status for: ${clusterName}`);
 
 
 
