@@ -104,5 +104,20 @@ router.delete('/:clusterName', async (req, res, next) => {
     }
 });
 
+router.post('/:clusterName/restore', async (req, res, next) => {
+    try {
+        let { clusterName } = req.params;
+        
+        // Auto-add SANDBOX- prefix if not present
+        if (!clusterName.startsWith('SANDBOX-')) {
+            const originalName = clusterName;
+            clusterName = `SANDBOX-${clusterName}`;
+            console.log(`  Auto-prefixed: "${originalName}" → "${clusterName}"`);
+        }
+
+        console.log(` Starting restore process for: ${clusterName}`);
+        console.log(`   This will return immediately with a job ID`);
+    }})
+
 
 export default router;

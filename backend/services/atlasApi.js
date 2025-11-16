@@ -455,7 +455,7 @@ class AtlasApiService {
         try {
             const sourceCluster = this.productionCluster;
             
-            console.log(`📋 Listing all restore jobs from ${sourceCluster}...`);
+            console.log(` Listing all restore jobs from ${sourceCluster}...`);
             
             const response = await this.client.get(
                 `/groups/${this.groupId}/clusters/${sourceCluster}/backup/restoreJobs`
@@ -477,7 +477,7 @@ class AtlasApiService {
 
     async resumeCluster(clusterName) {
         try {
-            console.log(`▶️ Resuming cluster: ${clusterName}`);
+            console.log(` Resuming cluster: ${clusterName}`);
             
             const response = await this.client.patch(
                 `/groups/${this.groupId}/clusters/${clusterName}`,
@@ -486,10 +486,10 @@ class AtlasApiService {
                 }
             );
             
-            console.log(`✅ Cluster resume initiated: ${clusterName}`);
+            console.log(` Cluster resume initiated: ${clusterName}`);
             return response.data;
         } catch (error) {
-            console.error(`❌ Failed to resume cluster ${clusterName}:`, error.response?.data || error.message);
+            console.error(` Failed to resume cluster ${clusterName}:`, error.response?.data || error.message);
             throw error;
         }
     }
@@ -500,7 +500,7 @@ class AtlasApiService {
         const pollInterval = 30000; // 30 seconds
         const startTime = Date.now();
 
-        console.log(`⏳ Waiting for cluster ${clusterName} to reach IDLE state`);
+        console.log(` Waiting for cluster ${clusterName} to reach IDLE state`);
         console.log(`   Max wait time: ${maxWaitMinutes} minutes`);
         console.log(`   Polling every 30 seconds...`);
 
@@ -514,21 +514,21 @@ class AtlasApiService {
                 const elapsedMinutes = Math.floor(elapsedSeconds / 60);
                 const remainingSeconds = elapsedSeconds % 60;
                 
-                console.log(`   ⏱️  ${elapsedMinutes}m ${remainingSeconds}s - State: ${currentState}${isPaused ? ' (PAUSED)' : ''}`);
+                console.log(`     ${elapsedMinutes}m ${remainingSeconds}s - State: ${currentState}${isPaused ? ' (PAUSED)' : ''}`);
 
                 // Handle PAUSED state - resume and continue waiting
                 if (isPaused) {
-                    console.log(`   🔄 Cluster is paused, resuming...`);
+                    console.log(`   Cluster is paused, resuming...`);
                     await this.resumeCluster(clusterName);
-                    console.log(`   ⏳ Waiting for resume to complete...`);
+                    console.log(`    Waiting for resume to complete...`);
                     await this.delay(pollInterval);
                     continue;
                 }
 
                 // Check if IDLE
                 if (currentState === 'IDLE') {
-                    console.log(`   ✅ Cluster ${clusterName} is now IDLE!`);
-                    console.log(`   ⏱️  Total wait time: ${elapsedMinutes}m ${remainingSeconds}s`);
+                    console.log(`   Cluster ${clusterName} is now IDLE!`);
+                    console.log(`    Total wait time: ${elapsedMinutes}m ${remainingSeconds}s`);
                     return cluster;
                 }
 
