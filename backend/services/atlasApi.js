@@ -491,6 +491,25 @@ class AtlasApiService {
             throw error;
         }
     }
+    async waitForClusterIdle(clusterName, maxWaitMinutes = 15) {
+        const maxWaitMs = maxWaitMinutes * 60 * 1000;
+        const pollInterval = 30000; // 30 seconds
+        const startTime = Date.now();
+
+        console.log(`⏳ Waiting for cluster ${clusterName} to reach IDLE state`);
+        console.log(`   Max wait time: ${maxWaitMinutes} minutes`);
+        console.log(`   Polling every 30 seconds...`);
+
+        while (Date.now() - startTime < maxWaitMs) {
+            try {
+                const cluster = await this.getCluster(clusterName);
+                const currentState = cluster.stateName;
+                const isPaused = cluster.paused;
+                
+                const elapsedSeconds = Math.round((Date.now() - startTime) / 1000);
+                const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+                const remainingSeconds = elapsedSeconds % 60;
+                
 }
 // Export both the class and a singleton instance
 export { AtlasApiService };
