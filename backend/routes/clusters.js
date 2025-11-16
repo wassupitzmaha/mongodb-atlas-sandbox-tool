@@ -176,9 +176,7 @@ router.post('/:clusterName/restore', async (req, res, next) => {
         console.log(`   Created: ${latestSnapshot.createdAt}`);
         console.log(`   Size: ${(latestSnapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2)} GB`);
 
-        // ==========================================
-        // STEP 4: Create restore job (async)
-        // ==========================================
+        
         console.log(` Creating restore job...`);
         const restoreJob = await atlasApi.createRestoreJob(
             clusterName,
@@ -188,6 +186,35 @@ router.post('/:clusterName/restore', async (req, res, next) => {
         console.log(` Restore job created successfully!`);
         console.log(`   Job ID: ${restoreJob.id}`);
         console.log(`   Restore will complete in 5-10 minutes`);
+
+        res.status(202).json({
+            status: 'success',
+            message: 'Restore job created successfully',
+            restoreJob: {
+                id: restoreJob.id,
+                targetCluster: clusterName,
+                sourceCluster: process.env.PRODUCTION_CLUSTER_NAME,
+                snapshotId: latestSnapshot.id,
+                snapshotCreatedAt: latestSnapshot.createdAt,
+                snapshotSizeGB: (latestSnapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2),
+                deliveryType: restoreJob.deliveryType,
+                createdAt: restoreJob.timestamp || new Date().toISOString(),
+                estimatedTime: '5-10 minutes'
+            },
+            pollUrl: `/api/clusters/${clusterName}/restore/status`,
+            instructions: [
+                'Poll the status endpoint every 30 seconds',
+                'Restore typically completes in 5-10 minutes',
+                'Once complete, use the connection string to connect'
+            ],
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error(`Restore process failed:`, error.message);
+        next(error);
+    }
+});
     }})
 
 
