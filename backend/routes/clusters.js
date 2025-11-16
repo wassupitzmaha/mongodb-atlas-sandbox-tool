@@ -118,23 +118,23 @@ router.post('/:clusterName/restore', async (req, res, next) => {
         console.log(` Starting restore process for: ${clusterName}`);
         console.log(`   This will return immediately with a job ID`);
 
-        console.log(`🔍 Checking if cluster exists...`);
+        console.log(` Checking if cluster exists...`);
         const exists = await atlasApi.clusterExists(clusterName);
 
         if (!exists) {
             // Auto-create cluster
-            console.log(`📦 Cluster doesn't exist, creating it...`);
+            console.log(` Cluster doesn't exist, creating it...`);
             console.log(`   Using M30 configuration (same as production)`);
             console.log(`   This will take 10-15 minutes...`);
 
             await atlasApi.createCluster(clusterName);
             
             // Wait for cluster to be IDLE (15 min timeout)
-            console.log(`⏳ Waiting for cluster to be ready...`);
+            console.log(` Waiting for cluster to be ready...`);
             await atlasApi.waitForClusterIdle(clusterName, 15);
-            console.log(`✅ Cluster created and ready!`);
+            console.log(` Cluster created and ready!`);
         } else {
-            console.log(`✅ Cluster exists, checking state...`);
+            console.log(` Cluster exists, checking state...`);
         }
     }})
 
