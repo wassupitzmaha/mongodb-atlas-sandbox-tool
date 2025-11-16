@@ -136,6 +136,23 @@ router.post('/:clusterName/restore', async (req, res, next) => {
         } else {
             console.log(` Cluster exists, checking state...`);
         }
+        const cluster = await atlasApi.getCluster(clusterName);
+        const currentState = cluster.stateName;
+        const isPaused = cluster.paused;
+
+        console.log(`   Current state: ${currentState}${isPaused ? ' (PAUSED)' : ''}`);
+
+        // Block DELETING state
+        if (currentState === 'DELETING' || currentState === 'DELETED') {
+            return res.status(400).json({
+                error: 'Cluster Not Available',
+                message: `Cannot restore to cluster in ${currentState} state`,
+                clusterName: clusterName,
+                currentState: currentState,
+                suggestion: 'Wait for deletion to complete or use a different cluster name',
+                timestamp: new Date().toISOString()
+            });
+        }
     }})
 
 
