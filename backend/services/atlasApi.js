@@ -528,7 +528,7 @@ class AtlasApiService {
                     return cluster;
                 }
 
-                            // Check for error states
+    
                             if (currentState === 'CREATION_FAILED') {
                                 throw new Error(`Cluster creation failed`);
                             }
@@ -542,6 +542,19 @@ class AtlasApiService {
                             if (!validStates.includes(currentState)) {
                                 console.warn(`   ⚠️  Unexpected state: ${currentState}`);
                             }
+
+                                        // Wait before next poll
+                await this.delay(pollInterval);
+            } catch (error) {
+                if (error.response?.status === 404) {
+                    throw new Error(`Cluster ${clusterName} not found`);
+                }
+                throw error;
+            }
+        }
+
+        throw new Error(`Timeout: Cluster ${clusterName} did not reach IDLE within ${maxWaitMinutes} minutes`);
+    }
 
 
 
