@@ -509,7 +509,20 @@ class AtlasApiService {
                 const elapsedSeconds = Math.round((Date.now() - startTime) / 1000);
                 const elapsedMinutes = Math.floor(elapsedSeconds / 60);
                 const remainingSeconds = elapsedSeconds % 60;
+
+                console.log(`   ⏱️  ${elapsedMinutes}m ${remainingSeconds}s - State: ${currentState}${isPaused ? ' (PAUSED)' : ''}`);
+
+                // Handle PAUSED state - resume and continue waiting
+                if (isPaused) {
+                    console.log(`   🔄 Cluster is paused, resuming...`);
+                    await this.resumeCluster(clusterName);
+                    console.log(`   ⏳ Waiting for resume to complete...`);
+                    await this.delay(pollInterval);
+                    continue;
+                }
+
                 
+
 }
 // Export both the class and a singleton instance
 export { AtlasApiService };
