@@ -473,6 +473,24 @@ class AtlasApiService {
             throw error;
         }
     }
+    async resumeCluster(clusterName) {
+        try {
+            console.log(`▶️ Resuming cluster: ${clusterName}`);
+            
+            const response = await this.client.patch(
+                `/groups/${this.groupId}/clusters/${clusterName}`,
+                {
+                    paused: false
+                }
+            );
+            
+            console.log(`✅ Cluster resume initiated: ${clusterName}`);
+            return response.data;
+        } catch (error) {
+            console.error(`❌ Failed to resume cluster ${clusterName}:`, error.response?.data || error.message);
+            throw error;
+        }
+    }
 }
 // Export both the class and a singleton instance
 export { AtlasApiService };
