@@ -522,6 +522,13 @@ class AtlasApiService {
                 }
 
                 
+                if (currentState === 'IDLE') {
+                    console.log(`   ✅ Cluster ${clusterName} is now IDLE!`);
+                    console.log(`   ⏱️  Total wait time: ${elapsedMinutes}m ${remainingSeconds}s`);
+                    return cluster;
+                }
+
+
 
 }
 // Export both the class and a singleton instance
