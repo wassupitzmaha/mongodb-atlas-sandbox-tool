@@ -168,6 +168,26 @@ router.post('/:clusterName/restore', async (req, res, next) => {
             await atlasApi.waitForClusterIdle(clusterName, 15);
             console.log(` Cluster is now IDLE and ready!`);
         }
+
+        console.log(`📸 Fetching latest snapshot from production...`);
+        const latestSnapshot = await atlasApi.getLatestSnapshot();
+        
+        console.log(`   Snapshot ID: ${latestSnapshot.id}`);
+        console.log(`   Created: ${latestSnapshot.createdAt}`);
+        console.log(`   Size: ${(latestSnapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2)} GB`);
+
+        // ==========================================
+        // STEP 4: Create restore job (async)
+        // ==========================================
+        console.log(` Creating restore job...`);
+        const restoreJob = await atlasApi.createRestoreJob(
+            clusterName,
+            latestSnapshot.id
+        );
+
+        console.log(` Restore job created successfully!`);
+        console.log(`   Job ID: ${restoreJob.id}`);
+        console.log(`   Restore will complete in 5-10 minutes`);
     }})
 
 
