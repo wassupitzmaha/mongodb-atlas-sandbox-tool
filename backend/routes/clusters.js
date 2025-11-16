@@ -225,7 +225,77 @@ router.get('/:clusterName/restore/status', async (req, res, next) => {
         }
 
         console.log(`🔍 Checking restore status for: ${clusterName}`);
+    }
+    let duration = null;
+    if (isComplete && latestJob.timestamp && latestJob.finishedAt) {
+        const startTime = new Date(latestJob.timestamp || latestJob.createdAt).getTime();
+        const endTime = new Date(latestJob.finishedAt).getTime();
+        const durationMs = endTime - startTime;
+        const minutes = Math.floor(durationMs / 60000);
+        const seconds = Math.floor((durationMs % 60000) / 1000);
+        duration = `${minutes}m ${seconds}s`;
+    }
 
+    // Prepare response
+    const response = {
+        status: 'success',
+        clusterName: clusterName,
+        restoreJob: {
+            id: latestJob.id,
+            targetCluster: latestJob.targetClusterName,
+            sourceCluster: process.env.PRODUCTION_CLUSTER_NAME,
+            snapshotId: latestJob.snapshotId,
+            deliveryType: latestJob.deliveryType,
+            createdAt: latestJob.timestamp || latestJob.createdAt,
+            finishedAt: latestJob.finishedAt || null,
+            cancelled: isCancelled,
+            duration: duration
+        },
+        state: {
+            isComplete: isComplete,
+            isActive: isActive,
+            isCancelled: isCancelled
+        },
+        timestamp: new Date().toISOString()
+    };
+
+    // Add appropriate message and next steps
+    if (isComplete) {
+        response.message = 'Restore completed successfully!';
+        response.nextSteps = [
+            'Your cluster is ready to use',
+            `Get connection string: GET /api/clusters/${clusterName}`,
+            'Connect to your database and start testing'
+        ];
+        
+        // Try to get connection string
+        try {
+            const cluster = await atlasApi.getCluster(clusterName);
+            response.connectionString = cluster.connectionStrings?.standardSrv || null;
+        } catch (error) {
+            console.warn(`Could not fetch connection string`);
+        }
+    } else if (isCancelled) {
+        response.message = ' Restore job was cancelled';
+        response.nextSteps = [
+            'Create a new restore job if needed',
+            `POST /api/clusters/${clusterName}/restore`
+        ];
+    } else {
+        response.message = ' Restore in progress...';
+        response.nextSteps = [
+            'Poll this endpoint again in 30 seconds',
+            'Typical restore time: 5-10 minutes'
+        ];
+    }
+
+    res.json(response);
+
+} catch (error) {
+    console.error(` Failed to check restore status:`, error.message);
+    next(error);
+}
+});
 
 
 export default router;
