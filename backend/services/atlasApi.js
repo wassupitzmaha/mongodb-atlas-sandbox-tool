@@ -528,6 +528,21 @@ class AtlasApiService {
                     return cluster;
                 }
 
+                            // Check for error states
+                            if (currentState === 'CREATION_FAILED') {
+                                throw new Error(`Cluster creation failed`);
+                            }
+                            
+                            if (currentState === 'DELETED' || currentState === 'DELETING') {
+                                throw new Error(`Cluster is being deleted or has been deleted`);
+                            }
+            
+                            // Valid transitional states: CREATING, REPAIRING, UPDATING
+                            const validStates = ['CREATING', 'REPAIRING', 'UPDATING'];
+                            if (!validStates.includes(currentState)) {
+                                console.warn(`   ⚠️  Unexpected state: ${currentState}`);
+                            }
+
 
 
 }
