@@ -1,4 +1,3 @@
-// Cluster Management Routes
 import express from 'express';
 import atlasApi from '../services/atlasApi.js';
 
@@ -34,7 +33,7 @@ router.get('/', async (req, res, next) => { //defines a route handler for the ro
 router.get('/:clusterName', async (req, res, next) => {
     try {
         const { clusterName } = req.params;
-        console.log(`🔍 Getting cluster details: ${clusterName}`);
+        console.log(` Getting cluster details: ${clusterName}`);
         
         const cluster = await atlasApi.getCluster(clusterName);
         
@@ -104,7 +103,6 @@ router.delete('/:clusterName', async (req, res, next) => {
     }
 });
 
-
 router.post('/:clusterName/restore', async (req, res, next) => {
     try {
         let { clusterName } = req.params;
@@ -119,8 +117,7 @@ router.post('/:clusterName/restore', async (req, res, next) => {
         console.log(` Starting restore process for: ${clusterName}`);
         console.log(`   This will return immediately with a job ID`);
 
- 
-        console.log(`🔍 Validating cluster name: ${clusterName}`);
+        console.log(` Validating cluster name: ${clusterName}`);
 
         // Protection 1: Block dangerous patterns
         const dangerousPatterns = [
@@ -195,70 +192,90 @@ router.post('/:clusterName/restore', async (req, res, next) => {
 
         console.log(` Cluster name validation passed`);
 
-        console.log(`🔍 Checking if cluster exists...`);
+        console.log(` Checking if cluster exists...`);
         const exists = await atlasApi.clusterExists(clusterName);
 
-        if (!exists) {
-            try {
-                console.log(` Cluster doesn't exist, creating it...`);
-                console.log(`   Using M30 configuration (same as production)`);
-                console.log(`   This will take 10-15 minutes...`);
+        if (exists) {
+            // Cluster already exists - return 409 error
+            console.error(` Cluster already exists: ${clusterName}`);
+            
+            // Generate suggestions for alternative names
+            const suggestions = [
+                `${clusterName}-v2`,
+                `${clusterName}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
+                `${clusterName}-${Date.now().toString().slice(-4)}`
+            ];
+            
+            return res.status(409).json({
+                error: 'Cluster Already Exists',
+                message: 'A cluster with this name already exists in this project',
+                clusterName: clusterName,
+                reason: 'MongoDB Atlas requires unique cluster names',
+                suggestion: 'Try a different name or add a suffix',
+                examples: suggestions,
+                timestamp: new Date().toISOString()
+            });
+        }
 
-                await atlasApi.createCluster(clusterName);
-                
-                // Wait for cluster to be IDLE (15 min timeout)
-                console.log(` Waiting for cluster to be ready...`);
-                await atlasApi.waitForClusterIdle(clusterName, 15);
-                console.log(` Cluster created and ready!`);
-                
-            } catch (createError) {
-                // Handle MongoDB duplicate cluster name error
-                if (createError.response?.status === 409) {
-                    console.error(` Cluster name already exists`);
-                    return res.status(409).json({
-                        error: 'Cluster Already Exists',
-                        message: 'A cluster with this name already exists',
-                        clusterName: clusterName,
-                        reason: 'MongoDB Atlas requires unique cluster names',
-                        suggestion: 'Try a different name or add a suffix',
-                        examples: [
-                            `${clusterName}-v2`,
-                            `${clusterName}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
-                            `${clusterName}-test`
-                        ],
-                        timestamp: new Date().toISOString()
-                    });
-                }
-                
-                // Handle other cluster creation errors
-                if (createError.response?.status === 400) {
-                    const errorDetail = createError.response.data?.detail || 
-                                       createError.response.data?.error || 
-                                       'Invalid cluster configuration';
-                    
-                    return res.status(400).json({
-                        error: 'Cluster Creation Failed',
-                        message: errorDetail,
-                        clusterName: clusterName,
-                        suggestion: 'Check the cluster name and try again',
-                        timestamp: new Date().toISOString()
-                    });
-                }
-                
-                // Handle any other errors
-                console.error(` Cluster creation failed:`, createError.message);
-                return res.status(500).json({
-                    error: 'Cluster Creation Failed',
-                    message: 'Failed to create cluster',
+        // Cluster doesn't exist - create it
+        try {
+            console.log(` Cluster doesn't exist, creating it...`);
+            console.log(`   Using M30 configuration (same as production)`);
+            console.log(`   This will take 10-15 minutes...`);
+
+            await atlasApi.createCluster(clusterName);
+            
+            // Wait for cluster to be IDLE (15 min timeout)
+            console.log(` Waiting for cluster to be ready...`);
+            await atlasApi.waitForClusterIdle(clusterName, 15);
+            console.log(` Cluster created and ready!`);
+            
+        } catch (createError) {
+            // Handle MongoDB duplicate cluster name error (race condition)
+            if (createError.response?.status === 409) {
+                console.error(` Cluster name already exists (race condition)`);
+                return res.status(409).json({
+                    error: 'Cluster Already Exists',
+                    message: 'A cluster with this name was just created by another request',
                     clusterName: clusterName,
-                    detail: createError.message,
-                    suggestion: 'Please try again or contact support',
+                    reason: 'Another process created this cluster between our check and creation',
+                    suggestion: 'Try a different name or wait for the existing cluster',
+                    examples: [
+                        `${clusterName}-v2`,
+                        `${clusterName}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
+                        `${clusterName}-${Date.now().toString().slice(-4)}`
+                    ],
                     timestamp: new Date().toISOString()
                 });
             }
-        } else {
-            console.log(` Cluster exists, checking state...`);
+            
+            // Handle other cluster creation errors
+            if (createError.response?.status === 400) {
+                const errorDetail = createError.response.data?.detail || 
+                                   createError.response.data?.error || 
+                                   'Invalid cluster configuration';
+                
+                return res.status(400).json({
+                    error: 'Cluster Creation Failed',
+                    message: errorDetail,
+                    clusterName: clusterName,
+                    suggestion: 'Check the cluster name and try again',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // Handle any other errors
+            console.error(` Cluster creation failed:`, createError.message);
+            return res.status(500).json({
+                error: 'Cluster Creation Failed',
+                message: 'Failed to create cluster',
+                clusterName: clusterName,
+                detail: createError.message,
+                suggestion: 'Please try again or contact support',
+                timestamp: new Date().toISOString()
+            });
         }
+
 
         // Get cluster state
         const cluster = await atlasApi.getCluster(clusterName);
@@ -297,7 +314,7 @@ router.post('/:clusterName/restore', async (req, res, next) => {
         }
 
         // Get latest snapshot
-        console.log(`📸 Fetching latest snapshot from production...`);
+        console.log(` Fetching latest snapshot from production...`);
         const latestSnapshot = await atlasApi.getLatestSnapshot();
         
         console.log(`   Snapshot ID: ${latestSnapshot.id}`);
@@ -433,7 +450,7 @@ router.get('/:clusterName/restore/status', async (req, res, next) => {
             timestamp: new Date().toISOString()
         };
 
-        // Adds appropriate message and next steps
+        // Add appropriate message and next steps
         if (isComplete) {
             response.message = ' Restore completed successfully!';
             response.nextSteps = [

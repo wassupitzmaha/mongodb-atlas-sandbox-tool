@@ -39,7 +39,7 @@ class SnapshotManager {
     
     async getAvailableSnapshots() {
         try {
-            console.log(`📸 Fetching all snapshots from ${this.productionCluster}...`);
+            console.log(` Fetching all snapshots from ${this.productionCluster}...`);
             //step 1: call atlasApi t get raw snapshot data from MongoDB Atlas
             const snapshots = await atlasApi.getClusterSnapshots(this.productionCluster); //calls the method from atlasApi service which defines what info we get when we call the getclusterSnapshots from the production cluster
             
@@ -55,7 +55,7 @@ class SnapshotManager {
     }
     async getLatestSnapshotInfo() {
         try {
-            console.log(`📷 Getting latest snapshot from ${this.productionCluster}...`);
+            console.log(` Getting latest snapshot from ${this.productionCluster}...`);
             //Step 1: get the latest snapshot(atlasApi handles sorting)
             const latestSnapshot = await atlasApi.getLatestSnapshot(); //this method is defined in AtlasAPI
             

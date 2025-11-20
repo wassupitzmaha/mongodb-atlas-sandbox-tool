@@ -41,7 +41,7 @@ class AtlasApiService {
             (response) => response, //for successful responses, jsut return unchanged
             async (error) => {
                 if (error.response?.status === 401) {
-                    console.log('🔄 Received 401, refreshing token...');
+                    console.log(' Received 401, refreshing token...');
                     //force token refresh using AtlasAuth service
                     await atlasAuth.refreshToken();
                     

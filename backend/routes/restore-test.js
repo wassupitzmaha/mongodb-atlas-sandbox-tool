@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/latest-snapshot', async (req, res, next) => {
     try {
-        console.log('🔍 Fetching latest snapshot from production...');
+        console.log(' Fetching latest snapshot from production...');
         
         const snapshot = await atlasApi.getLatestSnapshot();
         
@@ -46,20 +46,20 @@ router.post('/restore', async (req, res, next) => {
             });
         }
         
-        console.log(`🔄 Starting restore process...`);
+        console.log(` Starting restore process...`);
         console.log(`   Target Cluster: ${targetClusterName}`);
         
         // Step 1: Get snapshot ID (use latest if not provided)
         let snapshotToRestore = snapshotId;
         if (!snapshotToRestore) {
-            console.log('📸 No snapshot ID provided, fetching latest...');
+            console.log(' No snapshot ID provided, fetching latest...');
             const latestSnapshot = await atlasApi.getLatestSnapshot();
             snapshotToRestore = latestSnapshot.id;
             console.log(`   Using latest snapshot: ${snapshotToRestore}`);
         }
         
         // Step 2: Verify target cluster exists and is IDLE
-        console.log('🔍 Checking target cluster status...');
+        console.log(' Checking target cluster status...');
         try {
             const targetCluster = await atlasApi.getCluster(targetClusterName);
             
@@ -75,7 +75,7 @@ router.post('/restore', async (req, res, next) => {
                 });
             }
             
-            console.log(`✅ Target cluster is IDLE and ready for restore`);
+            console.log(` Target cluster is IDLE and ready for restore`);
             
         } catch (error) {
             if (error.response?.status === 404) {
@@ -92,7 +92,7 @@ router.post('/restore', async (req, res, next) => {
         }
         
         // Step 3: Create restore job
-        console.log('📦 Creating restore job...');
+        console.log(' Creating restore job...');
         const restoreJob = await atlasApi.createRestoreJob(
             targetClusterName,
             snapshotToRestore
@@ -127,7 +127,7 @@ router.get('/status/:restoreJobId', async (req, res, next) => {
     try {
         const { restoreJobId } = req.params;
         
-        console.log(`🔍 Checking restore job status: ${restoreJobId}`);
+        console.log(` Checking restore job status: ${restoreJobId}`);
         
         const status = await atlasApi.getRestoreJobStatus(restoreJobId);
         
@@ -137,8 +137,8 @@ router.get('/status/:restoreJobId', async (req, res, next) => {
             isComplete: status.isComplete,
             isActive: status.isActive,
             message: status.isComplete ? 
-                '✅ Restore completed! Your cluster is ready to use.' : 
-                '⏳ Restore still in progress... poll this endpoint again in 30s',
+                ' Restore completed! Your cluster is ready to use.' : 
+                ' Restore still in progress... poll this endpoint again in 30s',
             timestamp: new Date().toISOString()
         });
         
@@ -162,7 +162,7 @@ router.post('/restore-and-wait', async (req, res, next) => {
         
         const maxWait = maxWaitMinutes || 15;
         
-        console.log(`🔄 Starting full restore flow (with wait)...`);
+        console.log(` Starting full restore flow (with wait)...`);
         console.log(`   This will take approximately 5-10 minutes`);
         
         // Step 1: Get snapshot
@@ -184,13 +184,13 @@ router.post('/restore-and-wait', async (req, res, next) => {
         }
         
         // Step 3: Create restore job
-        console.log(`📦 Creating restore job...`);
+        console.log(` Creating restore job...`);
         const restoreJob = await atlasApi.createRestoreJob(
             targetClusterName,
             snapshotToRestore
         );
         
-        console.log(`⏳ Waiting for restore to complete (max ${maxWait} minutes)...`);
+        console.log(` Waiting for restore to complete (max ${maxWait} minutes)...`);
         
         // Step 4: Wait for completion
         const completedJob = await atlasApi.waitForRestoreCompletion(
@@ -203,7 +203,7 @@ router.post('/restore-and-wait', async (req, res, next) => {
         
         res.json({
             status: 'success',
-            message: '✅ Restore completed successfully!',
+            message: ' Restore completed successfully!',
             restoreJob: {
                 id: completedJob.id,
                 finishedAt: completedJob.finishedAt,
@@ -232,7 +232,7 @@ router.post('/restore-and-wait', async (req, res, next) => {
 
 router.get('/jobs', async (req, res, next) => {
     try {
-        console.log(`📋 Listing all restore jobs...`);
+        console.log(` Listing all restore jobs...`);
         
         const jobs = await atlasApi.listRestoreJobs();
         

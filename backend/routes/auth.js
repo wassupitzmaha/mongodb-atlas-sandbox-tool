@@ -53,7 +53,7 @@ router.get('/status', async (req, res, next) => {
 //POST route at '/refresh' to maually force a token refresh
 router.post('/refresh', async (req, res, next) => {
     try {
-        console.log('🔄 Forcing Atlas token refresh...');
+        console.log(' Forcing Atlas token refresh...');
         //refresh the token by calling the async function
         const token = await atlasAuth.refreshToken();
         
