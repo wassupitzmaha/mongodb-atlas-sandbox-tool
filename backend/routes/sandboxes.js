@@ -17,5 +17,16 @@ router.post('/deploy', async (req, res, next) => {
             });
         }
 
-        
+        // Validate purpose format (alphanumeric and hyphens only)
+        const validPurposePattern = /^[a-zA-Z0-9-]+$/;
+        if (!validPurposePattern.test(purpose)) {
+            return res.status(400).json({
+                error: 'Invalid Purpose Format',
+                message: 'Purpose can only contain letters, numbers, and hyphens',
+                example: 'feature-auth-test',
+                yourInput: purpose
+            });
+        }
+
+
 
