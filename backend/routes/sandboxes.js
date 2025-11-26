@@ -43,6 +43,14 @@ router.post('/deploy', async (req, res, next) => {
             });
         }
 
+        console.log(`\n${'='.repeat(60)}`);
+        console.log(` SANDBOX DEPLOYMENT STARTED`);
+        console.log(`${'='.repeat(60)}`);
+        console.log(` Sandbox Name: ${sandboxName}`);
+        console.log(` Purpose: ${purpose}`);
+        console.log(`  Started: ${new Date().toISOString()}`);
+        console.log(` Estimated Time: 15-20 minutes`);
+        console.log(`${'='.repeat(60)}\n`);
 
 
     // check if sandboc already exists
