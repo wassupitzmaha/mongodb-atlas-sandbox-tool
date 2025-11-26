@@ -28,5 +28,9 @@ router.post('/deploy', async (req, res, next) => {
             });
         }
 
+    // Generate sandbox name
+        const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const sandboxName = `SANDBOX-${purpose}-${timestamp}`;
+
 
 
