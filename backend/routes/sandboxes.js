@@ -32,8 +32,23 @@ router.post('/deploy', async (req, res, next) => {
         const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const sandboxName = `SANDBOX-${purpose}-${timestamp}`;
 
+        const exists = await atlasApi.clusterExists(sandboxName);
+        if (exists) {
+            return res.status(409).json({
+                error: 'Sandbox Already Exists',
+                message: `A sandbox with this purpose already exists today`,
+                existingSandbox: sandboxName,
+                suggestion: 'Use a different purpose or delete the existing sandbox',
+                deleteUrl: `/api/sandboxes/${sandboxName}`
+            });
+        }
+
+
+
     // check if sandboc already exists
-    
+
+
+
 
 
 
