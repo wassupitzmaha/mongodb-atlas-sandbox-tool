@@ -209,6 +209,137 @@ router.get('/', async (req, res, next) => {
     }
 });
 
+/**
+ * Get details for a specific sandbox
+ * GET /api/sandboxes/:name
+ */
+router.get('/:name', async (req, res, next) => {
+    try {
+        let { name } = req.params;
+        
+        // Auto-add SANDBOX- prefix if missing
+        if (!name.startsWith('SANDBOX-')) {
+            name = `SANDBOX-${name}`;
+        }
+        
+        console.log(` Getting sandbox details: ${name}`);
+        
+        const cluster = await atlasApi.getCluster(name);
+        
+        // Check if this is actually a sandbox
+        if (!cluster.name.startsWith('SANDBOX-')) {
+            return res.status(403).json({
+                error: 'Not a Sandbox',
+                message: 'This endpoint only works with sandbox clusters',
+                clusterName: cluster.name,
+                suggestion: 'Use /api/clusters/:name for non-sandbox clusters'
+            });
+        }
+        
+        console.log(`   State: ${cluster.stateName}\n`);
+        
+        res.json({
+            status: 'success',
+            sandbox: {
+                name: cluster.name,
+                state: cluster.stateName,
+                connectionString: cluster.connectionStrings?.standardSrv || null,
+                mongoDBVersion: cluster.mongoDBVersion,
+                paused: cluster.paused,
+                createdDate: cluster.createDate,
+                ready: cluster.stateName === 'IDLE' && !cluster.paused,
+                region: cluster.replicationSpecs?.[0]?.regionConfigs?.[0]?.regionName || 'Unknown'
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        if (error.response?.status === 404) {
+            return res.status(404).json({
+                error: 'Sandbox Not Found',
+                message: `Sandbox '${req.params.name}' does not exist`,
+                suggestion: 'Check available sandboxes: GET /api/sandboxes',
+                timestamp: new Date().toISOString()
+            });
+        }
+        next(error);
+    }
+});
+
+/**
+ * Delete a sandbox
+ * DELETE /api/sandboxes/:name
+ */
+router.delete('/:name', async (req, res, next) => {
+    try {
+        let { name } = req.params;
+        
+        // Auto-add SANDBOX- prefix if missing
+        if (!name.startsWith('SANDBOX-')) {
+            name = `SANDBOX-${name}`;
+        }
+        
+        // CRITICAL: Prevent deleting production cluster
+        if (name === process.env.PRODUCTION_CLUSTER_NAME) {
+            console.error(` BLOCKED: Attempted to delete production cluster`);
+            return res.status(403).json({
+                error: 'Production Cluster Protected',
+                message: 'Cannot delete production cluster via this endpoint',
+                clusterName: name,
+                reason: 'Safety mechanism to prevent accidental deletion'
+            });
+        }
+        
+        // Verify it's actually a sandbox
+        if (!name.startsWith('SANDBOX-')) {
+            return res.status(403).json({
+                error: 'Not a Sandbox',
+                message: 'This endpoint only deletes sandbox clusters',
+                clusterName: name,
+                suggestion: 'Use /api/clusters/:name/delete for non-sandbox clusters'
+            });
+        }
+        
+        console.log(`  Deleting sandbox: ${name}`);
+        
+        // Verify sandbox exists first
+        try {
+            await atlasApi.getCluster(name);
+        } catch (error) {
+            if (error.response?.status === 404) {
+                return res.status(404).json({
+                    error: 'Sandbox Not Found',
+                    message: `Sandbox '${name}' does not exist`,
+                    note: 'It may have already been deleted'
+                });
+            }
+            throw error;
+        }
+        
+        // Delete the cluster
+        await atlasApi.deleteCluster(name);
+        
+        console.log(`    Deletion initiated (takes ~2 minutes)\n`);
+        
+        res.json({
+            status: 'success',
+            message: `Sandbox deletion initiated`,
+            sandbox: {
+                name: name,
+                deletionInitiated: new Date().toISOString()
+            },
+            note: 'Deletion typically completes within 2 minutes',
+            verify: `GET /api/sandboxes/${name} will return 404 when complete`
+        });
+        
+    } catch (error) {
+        console.error(`Failed to delete sandbox:`, error.message);
+        next(error);
+    }
+});
+
+export default router;
+
 
 
 
