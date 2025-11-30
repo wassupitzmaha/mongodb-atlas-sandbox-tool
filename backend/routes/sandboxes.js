@@ -112,6 +112,18 @@ router.post('/deploy', async (req, res, next) => {
         const restoreCompleteTime = Math.round((Date.now() - startTime) / 1000 / 60);
         console.log(`    Restore completed! (Total: ${restoreCompleteTime} minutes)\n`);
 
+        console.log(' Getting connection details...');
+        const cluster = await atlasApi.getCluster(sandboxName);
+        
+        const totalTime = Math.round((Date.now() - startTime) / 1000 / 60);
+        
+        console.log(`\n${'='.repeat(60)}`);
+        console.log(`SANDBOX DEPLOYMENT COMPLETE!`);
+        console.log(`${'='.repeat(60)}`);
+        console.log(` Sandbox: ${sandboxName}`);
+        console.log(`  Total Time: ${totalTime} minutes`);
+        console.log(` Connection String: ${cluster.connectionStrings.standardSrv.substring(0, 50)}...`);
+        console.log(`${'='.repeat(60)}\n`);
 
 
 
