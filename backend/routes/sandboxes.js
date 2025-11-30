@@ -126,6 +126,50 @@ router.post('/deploy', async (req, res, next) => {
         console.log(`${'='.repeat(60)}\n`);
 
 
+        // Success response
+        res.json({
+            status: 'success',
+            message: ' Sandbox fully deployed and ready to use!',
+            sandbox: {
+                name: sandboxName,
+                purpose: purpose,
+                connectionString: cluster.connectionStrings.standardSrv,
+                mongoDBVersion: cluster.mongoDBVersion,
+                state: cluster.stateName,
+                region: 'US_EAST_1',
+                createdAt: new Date().toISOString()
+            },
+            deployment: {
+                totalDuration: `${totalTime} minutes`,
+                clusterCreationTime: `${clusterReadyTime} minutes`,
+                dataRestoreTime: `${restoreCompleteTime - clusterReadyTime} minutes`,
+                snapshotUsed: {
+                    id: snapshot.id,
+                    createdAt: snapshot.createdAt,
+                    sizeGB: (snapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2)
+                }
+            },
+            usage: {
+                connect: 'Use the connectionString above in your application',
+                monitor: `GET /api/sandboxes/${sandboxName}`,
+                delete: `DELETE /api/sandboxes/${sandboxName}`
+            },
+            nextSteps: [
+                '1. Copy the connection string above',
+                '2. Update your application configuration',
+                '3. Start testing your features!',
+                '4. Delete sandbox when done to save costs'
+            ]
+        });
+        
+    } catch (error) {
+        console.error('\n SANDBOX DEPLOYMENT FAILED');
+        console.error(`   Error: ${error.message}\n`);
+        next(error);
+    }
+});
+
+
 
 
 
