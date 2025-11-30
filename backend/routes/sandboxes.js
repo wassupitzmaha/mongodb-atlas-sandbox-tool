@@ -76,6 +76,20 @@ router.post('/deploy', async (req, res, next) => {
         
         await atlasApi.createCluster(sandboxName);
 
+        console.log('   STEP 2/4: Waiting for cluster to be ready...');
+        console.log(`   This typically takes 10-15 minutes`);
+        console.log(`   Checking status every 30 seconds...\n`);
+        
+        await atlasApi.waitForClusterIdle(sandboxName, 15);
+        
+        const clusterReadyTime = Math.round((Date.now() - startTime) / 1000 / 60);
+        console.log(`   Cluster ready! (${clusterReadyTime} minutes)\n`);
+
+        
+
+
+
+
 
 
 
