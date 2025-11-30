@@ -96,6 +96,22 @@ router.post('/deploy', async (req, res, next) => {
         console.log(`      Created: ${snapshot.createdAt}`);
         console.log(`      Size: ${(snapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2)} GB\n`);
 
+        //checking if this restores data with auto polling
+        console.log(' STEP 4/4: Restoring production data...');
+        console.log(`   Creating restore job...`);
+        
+        const restoreJob = await atlasApi.createRestoreJob(sandboxName, snapshot.id);
+        
+        console.log(`    Restore job created: ${restoreJob.id}`);
+        console.log(`    Waiting for restore to complete (5-10 minutes)...`);
+        console.log(`   Polling status every 30 seconds...\n`);
+        
+        // USING OUR EXISTING AUTO-POLLING METHOD
+        await atlasApi.waitForRestoreCompletion(restoreJob.id, 15);
+        
+        const restoreCompleteTime = Math.round((Date.now() - startTime) / 1000 / 60);
+        console.log(`    Restore completed! (Total: ${restoreCompleteTime} minutes)\n`);
+
 
 
 
