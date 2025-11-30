@@ -1,7 +1,17 @@
 import express from 'express';
-import atlasApi from '../services/atlasApi.js'
-const route = express.Router()
+import atlasApi from '../services/atlasApi.js';
 
+const router = express.Router();
+
+/**
+ * Deploy a complete sandbox environment with production data
+ * POST /api/sandboxes/deploy
+ * 
+ * Body: {
+ *   "purpose": "feature-auth-test",  // Required: for what we are testing
+ *   "wait": true                     // Optional: wait for completion (default: true)
+ * }
+ */
 router.post('/deploy', async (req, res, next) => {
     try {
         const { purpose, wait = true } = req.body;
@@ -16,7 +26,7 @@ router.post('/deploy', async (req, res, next) => {
                 }
             });
         }
-
+        
         // Validate purpose format (alphanumeric and hyphens only)
         const validPurposePattern = /^[a-zA-Z0-9-]+$/;
         if (!validPurposePattern.test(purpose)) {
@@ -27,11 +37,12 @@ router.post('/deploy', async (req, res, next) => {
                 yourInput: purpose
             });
         }
-
-    // Generate sandbox name
+        
+        // Generate sandbox name
         const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const sandboxName = `SANDBOX-${purpose}-${timestamp}`;
-
+        
+        // Check if sandbox already exists
         const exists = await atlasApi.clusterExists(sandboxName);
         if (exists) {
             return res.status(409).json({
@@ -42,7 +53,7 @@ router.post('/deploy', async (req, res, next) => {
                 deleteUrl: `/api/sandboxes/${sandboxName}`
             });
         }
-
+        
         console.log(`\n${'='.repeat(60)}`);
         console.log(` SANDBOX DEPLOYMENT STARTED`);
         console.log(`${'='.repeat(60)}`);
@@ -51,9 +62,10 @@ router.post('/deploy', async (req, res, next) => {
         console.log(`  Started: ${new Date().toISOString()}`);
         console.log(` Estimated Time: 15-20 minutes`);
         console.log(`${'='.repeat(60)}\n`);
-
+        
         if (!wait) {
             // ASYNC MODE: Return immediately, process in background
+            //job queue
             return res.status(202).json({
                 status: 'accepted',
                 message: 'Sandbox deployment started in background',
@@ -64,39 +76,40 @@ router.post('/deploy', async (req, res, next) => {
                 note: 'This is async mode - not fully implemented yet. Use wait:true for now.'
             });
         }
-
-        //sync mode: waiting for full completion
-        const startTime = Date.now()
-
-        //step1: create cluster
-        console.log('  STEP 1/4: Creating cluster...');
+        
+        // SYNC MODE: Wait for full completion
+        const startTime = Date.now();
+        
+// create cluster 
+        console.log(' STEP 1/4: Creating cluster...');
         console.log(`   Configuration: M30 (same as production)`);
         console.log(`   Region: US_EAST_1`);
         console.log(`   MongoDB Version: 8.0\n`);
         
         await atlasApi.createCluster(sandboxName);
-
-        console.log('   STEP 2/4: Waiting for cluster to be ready...');
+        
+ // waiting for cluster to be idle
+        console.log(' STEP 2/4: Waiting for cluster to be ready...');
         console.log(`   This typically takes 10-15 minutes`);
         console.log(`   Checking status every 30 seconds...\n`);
         
         await atlasApi.waitForClusterIdle(sandboxName, 15);
         
         const clusterReadyTime = Math.round((Date.now() - startTime) / 1000 / 60);
-        console.log(`   Cluster ready! (${clusterReadyTime} minutes)\n`);
-
-        //get latest snapshot
+        console.log(`    Cluster ready! (${clusterReadyTime} minutes)\n`);
+        
+// get latest snapshot
         console.log(' STEP 3/4: Getting latest production snapshot...');
         console.log(`   Source: ${process.env.PRODUCTION_CLUSTER_NAME}`);
         
         const snapshot = await atlasApi.getLatestSnapshot();
         
-        console.log(`   Snapshot found!`);
+        console.log(`    Snapshot found!`);
         console.log(`      Snapshot ID: ${snapshot.id}`);
         console.log(`      Created: ${snapshot.createdAt}`);
         console.log(`      Size: ${(snapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2)} GB\n`);
-
-        //checking if this restores data with auto polling
+        
+     //restore cluster with auto polling
         console.log(' STEP 4/4: Restoring production data...');
         console.log(`   Creating restore job...`);
         
@@ -106,26 +119,26 @@ router.post('/deploy', async (req, res, next) => {
         console.log(`    Waiting for restore to complete (5-10 minutes)...`);
         console.log(`   Polling status every 30 seconds...\n`);
         
-        // USING OUR EXISTING AUTO-POLLING METHOD
+        //  USE OUR EXISTING AUTO-POLLING METHOD
         await atlasApi.waitForRestoreCompletion(restoreJob.id, 15);
         
         const restoreCompleteTime = Math.round((Date.now() - startTime) / 1000 / 60);
         console.log(`    Restore completed! (Total: ${restoreCompleteTime} minutes)\n`);
-
-        console.log(' Getting connection details...');
+        
+//get connection string
+        console.log('Getting connection details...');
         const cluster = await atlasApi.getCluster(sandboxName);
         
         const totalTime = Math.round((Date.now() - startTime) / 1000 / 60);
         
         console.log(`\n${'='.repeat(60)}`);
-        console.log(`SANDBOX DEPLOYMENT COMPLETE!`);
+        console.log(` SANDBOX DEPLOYMENT COMPLETE!`);
         console.log(`${'='.repeat(60)}`);
         console.log(` Sandbox: ${sandboxName}`);
         console.log(`  Total Time: ${totalTime} minutes`);
         console.log(` Connection String: ${cluster.connectionStrings.standardSrv.substring(0, 50)}...`);
         console.log(`${'='.repeat(60)}\n`);
-
-
+        
         // Success response
         res.json({
             status: 'success',
@@ -333,15 +346,9 @@ router.delete('/:name', async (req, res, next) => {
         });
         
     } catch (error) {
-        console.error(`Failed to delete sandbox:`, error.message);
+        console.error(` Failed to delete sandbox:`, error.message);
         next(error);
     }
 });
 
 export default router;
-
-
-
-
-
-
