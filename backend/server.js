@@ -19,6 +19,7 @@ import authRoutes from './routes/auth.js';
 import clusterRoutes from './routes/clusters.js';
 import snapshotRoutes from './routes/snapshots.js';
 import restoreTestRoutes from './routes/restore-test.js';
+import sandboxRoutes from './routes/sandboxes.js';
 
 // Import custom middleware
 import errorHandler from './middleware/errorHandler.js';
