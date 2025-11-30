@@ -85,7 +85,16 @@ router.post('/deploy', async (req, res, next) => {
         const clusterReadyTime = Math.round((Date.now() - startTime) / 1000 / 60);
         console.log(`   Cluster ready! (${clusterReadyTime} minutes)\n`);
 
+        //get latest snapshot
+        console.log(' STEP 3/4: Getting latest production snapshot...');
+        console.log(`   Source: ${process.env.PRODUCTION_CLUSTER_NAME}`);
         
+        const snapshot = await atlasApi.getLatestSnapshot();
+        
+        console.log(`   Snapshot found!`);
+        console.log(`      Snapshot ID: ${snapshot.id}`);
+        console.log(`      Created: ${snapshot.createdAt}`);
+        console.log(`      Size: ${(snapshot.storageSizeBytes / 1024 / 1024 / 1024).toFixed(2)} GB\n`);
 
 
 
