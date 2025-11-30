@@ -105,6 +105,8 @@ app.use('/api/auth', authRoutes); //authentication routes
 app.use('/api/clusters', atlasAuthMiddleware, clusterRoutes); //cluster routes (with auth middleware)
 app.use('/api/snapshots', atlasAuthMiddleware, snapshotRoutes); //snapshot routes (with auth middelware)
 app.use('/api/restore-test', atlasAuthMiddleware, restoreTestRoutes);
+app.use('/api/sandboxes', atlasAuthMiddleware, sandboxRoutes);
+
 
 // Global error handler (must be last)
 app.use(errorHandler);
