@@ -169,10 +169,45 @@ router.post('/deploy', async (req, res, next) => {
     }
 });
 
-
-
-
-
+/**
+ * List all sandboxes in the project
+ * GET /api/sandboxes
+ */
+router.get('/', async (req, res, next) => {
+    try {
+        console.log(' Listing all sandboxes...');
+        
+        const allClusters = await atlasApi.listClusters();
+        
+        // Filter only SANDBOX-* clusters
+        const sandboxes = allClusters.results
+            .filter(cluster => cluster.name.startsWith('SANDBOX-'))
+            .map(cluster => ({
+                name: cluster.name,
+                state: cluster.stateName,
+                connectionString: cluster.connectionStrings?.standardSrv || null,
+                mongoDBVersion: cluster.mongoDBVersion,
+                createdDate: cluster.createDate,
+                paused: cluster.paused,
+                ready: cluster.stateName === 'IDLE' && !cluster.paused
+            }))
+            .sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate)); // Newest first
+        
+        console.log(`   Found ${sandboxes.length} sandboxes\n`);
+        
+        res.json({
+            status: 'success',
+            totalSandboxes: sandboxes.length,
+            sandboxes: sandboxes,
+            productionCluster: process.env.PRODUCTION_CLUSTER_NAME,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error(' Failed to list sandboxes:', error.message);
+        next(error);
+    }
+});
 
 
 
