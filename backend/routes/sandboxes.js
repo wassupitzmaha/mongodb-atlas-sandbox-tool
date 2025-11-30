@@ -52,8 +52,32 @@ router.post('/deploy', async (req, res, next) => {
         console.log(` Estimated Time: 15-20 minutes`);
         console.log(`${'='.repeat(60)}\n`);
 
+        if (!wait) {
+            // ASYNC MODE: Return immediately, process in background
+            return res.status(202).json({
+                status: 'accepted',
+                message: 'Sandbox deployment started in background',
+                sandbox: {
+                    name: sandboxName,
+                    purpose: purpose
+                },
+                note: 'This is async mode - not fully implemented yet. Use wait:true for now.'
+            });
+        }
 
-    // check if sandboc already exists
+        //sync mode: waiting for full completion
+        const startTime = Date.now()
+
+        //step1: create cluster
+        console.log('  STEP 1/4: Creating cluster...');
+        console.log(`   Configuration: M30 (same as production)`);
+        console.log(`   Region: US_EAST_1`);
+        console.log(`   MongoDB Version: 8.0\n`);
+        
+        await atlasApi.createCluster(sandboxName);
+
+
+
 
 
 
