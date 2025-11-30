@@ -405,7 +405,7 @@ class AtlasApiService {
                     throw new Error(`Restore job failed: ${job.failureReason || 'Unknown reason'}`);
                 }
                 
-                console.log(`   ⏳ Still restoring... checking again in 30s`);
+                console.log(`    Still restoring... checking again in 30s`);
                 await this.delay(pollInterval);
                 
             } catch (error) {

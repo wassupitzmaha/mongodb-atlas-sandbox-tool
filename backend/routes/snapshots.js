@@ -76,7 +76,7 @@ router.get('/latest', async (req, res, next) => {
 // Validate snapshot availability for deployment
 router.get('/validate', async (req, res, next) => {
     try {
-        console.log('🔍 Validating snapshot availability...');
+        console.log(' Validating snapshot availability...');
         
         //call service method that checks if snapshot is suitable
         const validation = await snapshotManager.validateSnapshotAvailability();
@@ -109,7 +109,7 @@ router.get('/cluster/:clusterName', async (req, res, next) => {
     try {
         //extract clusterName param from the URL, req.params is a object containign all URL parameters
         const { clusterName } = req.params;// req.params = { clusterName: "JustAir-dedicated-cluster"}
-        console.log(`📸 Getting snapshots for cluster: ${clusterName}`);
+        console.log(` Getting snapshots for cluster: ${clusterName}`);
         
         //call atlasApi to get snapshots direclty from the requested cluster
         const snapshots = await atlasApi.getClusterSnapshots(clusterName); //calls atlasApi directly instead of through snapshotManager
