@@ -379,16 +379,24 @@ router.get('/:name', async (req, res, next) => {
     }
 });
 
-/**
- * Delete sandbox
- * DELETE /api/sandboxes/:name
- */
+// In routes/sandboxes.js
 router.delete('/:name', async (req, res, next) => {
     try {
         let { name } = req.params;
         
         if (!name.startsWith('SANDBOX-')) {
             name = `SANDBOX-${name}`;
+        }
+        
+        // NEW: Check existence first
+        const exists = await atlasApi.clusterExists(name);
+        if (!exists) {
+            return res.status(404).json({
+                error: 'Sandbox Not Found',
+                message: `Sandbox "${name}" does not exist or has already been deleted`,
+                name: name,
+                timestamp: new Date().toISOString()
+            });
         }
         
         // Protection: Can't delete production
@@ -410,13 +418,6 @@ router.delete('/:name', async (req, res, next) => {
         });
         
     } catch (error) {
-        if (error.response?.status === 404) {
-            return res.status(404).json({
-                error: 'Sandbox Not Found',
-                message: 'Sandbox may already be deleted',
-                name: req.params.name
-            });
-        }
         next(error);
     }
 });

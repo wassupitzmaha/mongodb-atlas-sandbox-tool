@@ -52,7 +52,7 @@ const PORT = process.env.PORT || 3006;
 // configure cors middleware , this allows our react app to call our api
 app.use(cors({
     //allow request from our frontend url
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true //allows for cookies and creds to be sent
 }));
 //configures express to parse json req bodies, limit: 10 mb
