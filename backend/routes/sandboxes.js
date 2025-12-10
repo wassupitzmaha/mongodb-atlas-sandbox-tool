@@ -7,7 +7,10 @@ const router = express.Router();
 
 // IN-MEMORY JOB STORE
 
-const deploymentJobs = new Map();
+const deploymentJobs = new Map(); //lives in node.js process memory, 
+
+//cons:
+//when server restarts: all job history are list, each job has different job dtaat, but this is simple, no dependences needed and sfast
 
 // Helper: Generate unique job ID
 function generateJobId() {
@@ -16,9 +19,13 @@ function generateJobId() {
 
 // Helper: Update job status
 function updateJobStatus(jobId, updates) {
-    const job = deploymentJobs.get(jobId);
+    //retrieve the exisitng job from the Map
+    const job = deploymentJobs.get(jobId); 
+    //see if job exists (safety check)
     if (job) {
+        //step 3: merge new updates into exisiting job object
         Object.assign(job, updates, { updatedAt: new Date().toISOString() });
+        //console log for monitoring
         console.log(` Job ${jobId}: ${updates.step} (${updates.progress}%)`);
     }
 }
@@ -52,7 +59,7 @@ async function deployInBackground(jobId, sandboxName, purpose) {
         while (!clusterReady && attempts < 30) { // 30 attempts = 15 minutes max
             await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30s
             
-            const cluster = await atlasApi.getCluster(sandboxName);
+            const cluster = await atlasApi.getCluster(sandboxName); //reusing our atlasAPI services
             attempts++;
             
             // Update progress gradually (20% -> 50%)
@@ -188,7 +195,7 @@ async function deployInBackground(jobId, sandboxName, purpose) {
  */
 router.post('/deploy-async', async (req, res, next) => {
     try {
-        const { purpose } = req.body;
+        const { purpose } = req.body; //this is where the cluster name is stored in POSTMAN
         
         // Validation
         if (!purpose) {
@@ -199,9 +206,9 @@ router.post('/deploy-async', async (req, res, next) => {
             });
         }
         
-        const validPurposePattern = /^[a-zA-Z0-9-]+$/;
+        const validPurposePattern = /^[a-zA-Z0-9-]+$/; //validates the purpose format
         if (!validPurposePattern.test(purpose)) {
-            return res.status(400).json({
+            return res.status(400).json({ //400 error for a bad name
                 error: 'Invalid Purpose Format',
                 message: 'Purpose can only contain letters, numbers, and hyphens',
                 example: { purpose: 'feature-auth-test' }
@@ -209,9 +216,9 @@ router.post('/deploy-async', async (req, res, next) => {
         }
         
         // Generate names
-        const jobId = generateJobId();
+        const jobId = generateJobId(); //generate a jobid
         const timestamp = new Date().toISOString().split('T')[0];
-        const sandboxName = `SANDBOX-${purpose}-${timestamp}`;
+        const sandboxName = `SANDBOX-${purpose}-${timestamp}`; //this adds the SANDBOX prefix to all names
         
         // Check if already exists
         const exists = await atlasApi.clusterExists(sandboxName);
@@ -224,7 +231,7 @@ router.post('/deploy-async', async (req, res, next) => {
             });
         }
         
-        // Create job in memory
+        // Create job in memory and store the job
         deploymentJobs.set(jobId, {
             jobId: jobId,
             sandboxName: sandboxName,
@@ -274,7 +281,7 @@ router.post('/deploy-async', async (req, res, next) => {
 router.get('/jobs/:jobId', (req, res) => {
     const { jobId } = req.params;
     
-    const job = deploymentJobs.get(jobId);
+    const job = deploymentJobs.get(jobId);//direct look up key, 0(1) instant
     
     if (!job) {
         return res.status(404).json({
@@ -388,7 +395,7 @@ router.delete('/:name', async (req, res, next) => {
             name = `SANDBOX-${name}`;
         }
         
-        // NEW: Check existence first
+        // Check existence first
         const exists = await atlasApi.clusterExists(name);
         if (!exists) {
             return res.status(404).json({
