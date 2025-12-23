@@ -55,6 +55,7 @@ async function deployInBackground(jobId, sandboxName, purpose) {
         
         // Poll cluster status and update progress
         let clusterReady = false;
+        //poll until the cluster is IDLE
         let attempts = 0;
         while (!clusterReady && attempts < 30) { // 30 attempts = 15 minutes max
             await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30s
@@ -63,7 +64,7 @@ async function deployInBackground(jobId, sandboxName, purpose) {
             attempts++;
             
             // Update progress gradually (20% -> 50%)
-            const progressIncrement = Math.min(50, 20 + (attempts * 1));
+            const progressIncrement = Math.min(50, 20 + (attempts * 1)); // each attempt adds 1%
             updateJobStatus(jobId, {
                 step: 'waiting_for_cluster',
                 progress: progressIncrement,
@@ -140,6 +141,7 @@ async function deployInBackground(jobId, sandboxName, purpose) {
             message: 'Getting connection details...'
         });
         
+        //finalize
         const finalCluster = await atlasApi.getCluster(sandboxName);
         const totalDuration = Math.round((Date.now() - startTime) / 1000 / 60);
         
@@ -170,7 +172,7 @@ async function deployInBackground(jobId, sandboxName, purpose) {
         
     } catch (error) {
         console.error(` Deployment ${jobId} failed:`, error.message);
-        
+        //if naything fails, mark job as failed
         updateJobStatus(jobId, {
             status: 'failed',
             step: 'error',
@@ -300,7 +302,7 @@ router.get('/jobs/:jobId', (req, res) => {
 });
 
 /**
- * List all jobs (OPTIONAL - for debugging)
+ * List all jobs ( - for debugging)
  * GET /api/sandboxes/jobs
  */
 router.get('/jobs', (req, res) => {
