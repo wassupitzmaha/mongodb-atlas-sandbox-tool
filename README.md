@@ -3,7 +3,8 @@
 A MERN stack application for deploying and managing MongoDB Atlas sandbox environments with one-click deploy button
 ## Environment Confirguration
 
-#MongoDB ATLAS API CONFIGURATION
+#MongoDB ATLAS API CONFIGURATION <br>
+
 ATLAS_CLIENT_ID=[]<br>
 ATLAS_CLIENT_SECRET=[]<br>
 ATLAS_GROUP_ID=[]<br>
